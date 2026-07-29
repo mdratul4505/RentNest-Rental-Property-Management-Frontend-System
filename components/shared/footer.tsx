@@ -56,25 +56,13 @@ export function SiteFooter() {
           {/* Brand + newsletter */}
           <div className="flex flex-col gap-6 lg:col-span-4">
             <Link href="/" className="flex items-center gap-2" aria-label="Home">
-              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <svg
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                >
-                  <path
-                    d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white">
+                <Globe className="h-5 w-5" />
               </span>
-              <span className="text-lg font-semibold">Acme Inc.</span>
+              <span className="text-lg font-bold">RentNest<span className="text-orange-500">.</span></span>
             </Link>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground text-pretty">
-              Build, ship, and scale your products faster with a platform designed for modern teams.
+              RentNest makes it easy for landlords to list properties and for tenants to find their dream home with secure booking and Stripe payments.
             </p>
 
             <form
@@ -122,7 +110,7 @@ export function SiteFooter() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
           <p className="text-sm text-muted-foreground">
-            {`© ${new Date().getFullYear()} Acme Inc. All rights reserved.`}
+            {`© ${new Date().getFullYear()} RentNest. All rights reserved.`}
           </p>
           <div className="flex items-center gap-2">
             {socialLinks.map(({ label, href, icon: Icon }) => (

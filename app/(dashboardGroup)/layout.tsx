@@ -1,27 +1,11 @@
-import { Navbar } from "@/components/shared/navbar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { getMe } from "@/service/getMe";
-import DashboardSidebar from "./_components/DashboardSidebar";
-
-const DashboardLayout = async (
-    {
-        children
-    } : {
-        children: React.ReactNode
-    }
-) => {
-   const user = await getMe();
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar user={user} />
-      <SidebarProvider>
-        <div className="flex flex-1">
-          <DashboardSidebar user={user} />
-          <main className="flex-1 min-w-0">{children}</main>
-        </div>
-      </SidebarProvider>
+    <div className="bg-slate-50 min-h-screen">
+      {/* 
+        This is a simple wrapper for dashboards. 
+        In actual deployment, you might wrap this with a DashboardSidebar or role checks.
+      */}
+      {children}
     </div>
   );
-};
-
-export default DashboardLayout
+}

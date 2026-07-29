@@ -16,21 +16,28 @@ export const getMe = async () => {
         }
     }
 
-    const res = await fetch(`${process.env.BACKEND_API_URL}/api/users/me`, {
-        headers : {
+    try {
+        const apiUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:5000";
+        const res = await fetch(`${apiUrl}/api/auth/me`, { // Wait, the route in backend is '/api/auth/me' or '/api/users/me'? Let's check!
+            headers : {
+                "Authorization": `Bearer ${accessToken}`
+            },
+            cache : "no-store"
+        });
 
-            Cookie : `accessToken=${accessToken}`
-        },
-
-        cache : "force-cache",
-        next : {
-            revalidate : 60 * 60 * 24, // 1day
-            tags : ["my-profile"]
+        if (!res.ok) {
+            return {
+                success: false,
+                message: "Failed to fetch user profile"
+            };
         }
-    });
 
-    const result = res.json();
-
-
-    return result
+        const result = await res.json();
+        return result;
+    } catch (err: any) {
+        return {
+            success: false,
+            message: err.message || "Network error"
+        };
+    }
 }

@@ -1,70 +1,51 @@
-import type { ReactNode } from "react";
-import Link from "next/link";
-import { AlertTriangle, ArrowLeft, RotateCcw } from "lucide-react";
+"use client";
+
+import { useEffect } from "react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import NextLink from "next/link";
 
-interface ErrorPageProps {
-  /** Large status code or short label shown at the top, e.g. "404" or "500" */
-  code?: string;
-  /** Main heading */
-  title?: string;
-  /** Supporting description text */
-  description?: string;
-  /** Optional icon override */
-  icon?: ReactNode;
-  /** Called when the user clicks the retry button. If omitted, the retry button is hidden. */
-  onRetry?: () => void;
-  /** Destination for the primary "back home" action */
-  homeHref?: string;
-}
+export default function ErrorBoundary({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error("Next.js Error Boundary caught an error:", error);
+  }, [error]);
 
-export function ErrorPage({
-  code = "500",
-  title = "Something went wrong",
-  description = "An unexpected error occurred while processing your request. You can try again, or head back to safety.",
-  icon,
-  onRetry,
-  homeHref = "/",
-}: ErrorPageProps) {
   return (
-    <main className="flex min-h-svh items-center justify-center bg-background px-4 py-16">
-      <div className="w-full max-w-md text-center">
-        <div className="mx-auto mb-8 flex size-16 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground shadow-sm">
-          {icon ?? <AlertTriangle className="size-7" aria-hidden="true" />}
+    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-16">
+      <div className="w-full max-w-md text-center bg-white p-8 rounded-3xl border border-slate-100 shadow-lg">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-red-100 bg-red-50 text-red-500 shadow-sm">
+          <AlertTriangle className="h-8 w-8" aria-hidden="true" />
         </div>
 
-        {code ? (
-          <p className="mb-3 font-mono text-sm font-medium tracking-widest text-muted-foreground">
-            ERROR {code}
-          </p>
-        ) : null}
+        <p className="mb-2 font-mono text-[10px] font-bold tracking-widest text-red-500 uppercase">
+          Application Error
+        </p>
 
-        <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          {title}
+        <h1 className="text-2xl font-black tracking-tight text-slate-800">
+          Something went wrong
         </h1>
 
-        <p className="mx-auto mt-4 max-w-sm text-pretty leading-relaxed text-muted-foreground">
-          {description}
+        <p className="mx-auto mt-3 max-w-sm text-xs font-semibold leading-relaxed text-slate-400">
+          {error.message || "An unexpected error occurred while processing your request. Please try again."}
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          {onRetry ? (
-            <Button onClick={onRetry} className="w-full sm:w-auto">
-              <RotateCcw className="size-4" aria-hidden="true" />
-              Try again
-            </Button>
-          ) : null}
-
-          <Button
-            asChild
-            variant={onRetry ? "outline" : "default"}
-            className="w-full sm:w-auto"
-          >
-            <Link href={"/"}>
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              Back to home
-            </Link>
+          <Button onClick={reset} className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white font-bold cursor-pointer rounded-xl h-12 px-5 text-xs">
+            <RotateCcw className="h-4 w-4 mr-2" aria-hidden="true" />
+            Try again
           </Button>
+
+          <NextLink href="/" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold rounded-xl h-12 px-5 text-xs">
+              Back to Home
+            </Button>
+          </NextLink>
         </div>
       </div>
     </main>
