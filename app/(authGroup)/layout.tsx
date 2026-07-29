@@ -9,8 +9,7 @@ const AuthGroupLayout = async (
   return <div>
     <Navbar user={user}/>
     {children}
-    <SiteFooter></SiteFooter>
-  
+    <SiteFooter />
   </div>;
 };
 
