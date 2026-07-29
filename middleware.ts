@@ -75,6 +75,14 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Redirect shorthand /login and /register paths
+  if (pathname === "/login") {
+    return NextResponse.redirect(new URL("/auth/login", request.url));
+  }
+  if (pathname === "/register") {
+    return NextResponse.redirect(new URL("/auth/register", request.url));
+  }
+
   // Redirect authenticated users trying to access login/register to their dashboard
   if (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register")) {
     if (accessToken) {
@@ -98,5 +106,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/auth/login", "/auth/register"],
+  matcher: ["/dashboard/:path*", "/auth/login", "/auth/register", "/login", "/register"],
 };
