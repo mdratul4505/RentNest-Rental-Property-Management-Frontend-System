@@ -17,10 +17,10 @@ const propertyFormSchema = z.object({
   title: z.string().min(1, "Title is required").min(5, "Title must be at least 5 characters"),
   description: z.string().min(1, "Description is required").min(10, "Description must be at least 10 characters"),
   location: z.string().min(1, "Location is required"),
-  price: z.preprocess(
-    (val) => (val === "" ? undefined : Number(val)),
-    z.number({ message: "Price is required" }).int("Price must be an integer").positive("Price must be positive")
-  ),
+  price: z.number({ message: "Price is required" })
+    .refine((val) => !isNaN(val), { message: "Price is required" })
+    .refine((val) => Number.isInteger(val), { message: "Price must be an integer" })
+    .refine((val) => val > 0, { message: "Price must be positive" }),
   amenities: z.string().min(1, "At least one amenity is required (e.g. WiFi, AC)"),
   categoryId: z.string().min(1, "Please select a category"),
   isAvailable: z.boolean(),
@@ -222,7 +222,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                 </span>
                 <input
                   type="number"
-                  {...register("price")}
+                  {...register("price", { valueAsNumber: true })}
                   className={`block w-full pl-9 pr-4 py-3 bg-slate-50 hover:bg-slate-50 border ${
                     errors.price ? "border-red-500 focus:ring-red-400" : "border-slate-200 focus:ring-primary/45"
                   } rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:bg-white transition-all text-xs font-semibold`}

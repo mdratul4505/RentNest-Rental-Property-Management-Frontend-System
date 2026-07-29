@@ -17,7 +17,7 @@ const propertyFormSchema = z.object({
   title: z.string().min(1, "Title is required").min(5, "Title must be at least 5 characters"),
   description: z.string().min(1, "Description is required").min(10, "Description must be at least 10 characters"),
   location: z.string().min(1, "Location is required"),
-  price: z.number({ invalid_type_error: "Price is required" })
+  price: z.number({ message: "Price is required" })
     .refine((val) => !isNaN(val), { message: "Price is required" })
     .refine((val) => Number.isInteger(val), { message: "Price must be an integer" })
     .refine((val) => val > 0, { message: "Price must be positive" }),
