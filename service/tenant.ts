@@ -62,7 +62,7 @@ export const createReview = async (payload: { propertyId: string; rating: number
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ body: payload }),
+      body: JSON.stringify(payload),
     });
 
     const result = await res.json();
@@ -86,7 +86,7 @@ export const createPaymentIntent = async (rentalId: string) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ body: { rentalId } }),
+      body: JSON.stringify({ rentalId }),
     });
 
     const result = await res.json();
@@ -110,7 +110,7 @@ export const confirmPayment = async (transactionId: string) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ body: { transactionId } }),
+      body: JSON.stringify({ transactionId }),
     });
 
     const result = await res.json();

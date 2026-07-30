@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/service/logout";
-import { LayoutDashboard, LogOut, User, Home, Building2 } from "lucide-react";
+import { LayoutDashboard, LogOut, User, Home, Building2, Info, Phone } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
@@ -67,7 +67,7 @@ export function Navbar({ user }: { user: any }) {
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
               }`}
             >
-              <Home className="w-4 h-4" /> Home
+              <Home className="w-4 h-4" /> 🏠 Home
             </Link>
 
             <Link
@@ -78,7 +78,29 @@ export function Navbar({ user }: { user: any }) {
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
               }`}
             >
-              <Building2 className="w-4 h-4" /> Properties
+              <Building2 className="w-4 h-4" /> 🏢 Properties
+            </Link>
+
+            <Link
+              href="/about"
+              className={`text-sm font-semibold transition-all duration-200 py-1.5 px-3 rounded-lg flex items-center gap-1.5 ${
+                isActive("/about")
+                  ? "text-primary bg-primary/5"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              }`}
+            >
+              <Info className="w-4 h-4" /> ℹ️ About
+            </Link>
+
+            <Link
+              href="/contact"
+              className={`text-sm font-semibold transition-all duration-200 py-1.5 px-3 rounded-lg flex items-center gap-1.5 ${
+                isActive("/contact")
+                  ? "text-primary bg-primary/5"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              }`}
+            >
+              <Phone className="w-4 h-4" /> 📞 Contact
             </Link>
 
             {isUserLoggedIn && (
@@ -101,9 +123,17 @@ export function Navbar({ user }: { user: any }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 p-1.5 pr-3 bg-slate-50 hover:bg-slate-100 border border-slate-200/60 rounded-full cursor-pointer transition-all duration-200 group focus:outline-none">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform duration-200">
-                      {userData.name.charAt(0).toUpperCase()}
-                    </div>
+                    {userData.image ? (
+                      <img
+                        src={userData.image}
+                        alt={userData.name}
+                        className="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-sm group-hover:scale-105 transition-transform duration-200"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform duration-200">
+                        {userData.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <span className="hidden sm:inline text-sm font-bold text-slate-700">
                       {userData.name.split(" ")[0]}
                     </span>

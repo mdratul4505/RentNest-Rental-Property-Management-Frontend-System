@@ -40,7 +40,7 @@ export const updateUserStatus = async (id: string, status: "ACTIVE" | "BLOCKED")
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ body: { status } }),
+      body: JSON.stringify({ status }),
     });
 
     const result = await res.json();

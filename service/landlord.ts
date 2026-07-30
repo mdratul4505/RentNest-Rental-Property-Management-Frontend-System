@@ -36,7 +36,7 @@ export const createLandlordProperty = async (payload: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ body: payload }),
+      body: JSON.stringify(payload),
     });
 
     const result = await res.json();
@@ -71,7 +71,7 @@ export const updateLandlordProperty = async (
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ body: payload }),
+      body: JSON.stringify(payload),
     });
 
     const result = await res.json();
@@ -139,7 +139,7 @@ export const updateRequestStatus = async (id: string, status: "APPROVED" | "REJE
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ body: { status } }),
+      body: JSON.stringify({ status }),
     });
 
     const result = await res.json();

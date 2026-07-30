@@ -20,6 +20,7 @@ const registerSchema = z.object({
   role: z.enum(["TENANT", "LANDLORD"], {
     message: "Please select a role",
   }),
+  image: z.string().optional(),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -27,6 +28,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const {
     register,
@@ -41,8 +43,22 @@ export default function RegisterPage() {
       email: "",
       password: "",
       role: "TENANT",
+      image: "",
     },
   });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        setValue("image", base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const selectedRole = watch("role");
 
@@ -165,6 +181,32 @@ export default function RegisterPage() {
                   {errors.password.message}
                 </p>
               )}
+            </div>
+
+            {/* Profile Image */}
+            <div>
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5 ml-1">
+                Profile Image / Photo
+              </label>
+              <div className="relative flex items-center gap-4">
+                <div className="relative flex-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-slate-900 file:text-white hover:file:bg-slate-800 transition-all border border-slate-200 rounded-xl p-2 bg-slate-50/50 cursor-pointer"
+                  />
+                </div>
+                {imagePreview && (
+                  <div className="shrink-0 animate-scale-in">
+                    <img
+                      src={imagePreview}
+                      alt="Avatar Preview"
+                      className="w-12 h-12 rounded-full object-cover border-2 border-primary shadow-md hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Role selection Cards */}
