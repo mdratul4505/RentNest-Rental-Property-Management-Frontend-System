@@ -10,7 +10,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { Loader2, Mail, Lock, User, Shield } from "lucide-react";
+import { Loader2, Mail, Lock, User, Shield, Image as ImageIcon, Link as LinkIcon, Upload } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Form validation schema matching backend constraints
 const registerSchema = z.object({
@@ -47,19 +48,6 @@ export default function RegisterPage() {
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setImagePreview(base64String);
-        setValue("image", base64String);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const selectedRole = watch("role");
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -85,7 +73,12 @@ export default function RegisterPage() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
 
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-slate-100/80 relative z-10 animate-fade-in-up">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-slate-100/80 relative z-10"
+      >
         <div className="text-center">
           <Link href="/" className="inline-block mb-4">
             <span className="text-3xl font-black text-primary tracking-tight">
@@ -183,28 +176,46 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Profile Image */}
+            {/* Profile Image Tab System */}
             <div>
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5 ml-1">
-                Profile Image / Photo
+                Profile Image URL
               </label>
+              
               <div className="relative flex items-center gap-4">
                 <div className="relative flex-1">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-slate-900 file:text-white hover:file:bg-slate-800 transition-all border border-slate-200 rounded-xl p-2 bg-slate-50/50 cursor-pointer"
-                  />
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <ImageIcon className="w-4 h-4" />
+                    </span>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/photo-1534528741775-53994a69daeb"
+                      {...register("image", {
+                        onChange: (e) => {
+                          const url = e.target.value;
+                          setImagePreview(url || null);
+                        }
+                      })}
+                      className="block w-full pl-10 pr-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 focus:ring-primary/40 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:bg-white transition-all text-sm font-medium"
+                    />
+                  </div>
                 </div>
                 {imagePreview && (
-                  <div className="shrink-0 animate-scale-in">
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="shrink-0"
+                  >
                     <img
                       src={imagePreview}
                       alt="Avatar Preview"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
                       className="w-12 h-12 rounded-full object-cover border-2 border-primary shadow-md hover:scale-110 transition-transform duration-300"
                     />
-                  </div>
+                  </motion.div>
                 )}
               </div>
             </div>
@@ -215,7 +226,9 @@ export default function RegisterPage() {
                 Register As
               </label>
               <div className="grid grid-cols-2 gap-4">
-                <div
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setValue("role", "TENANT")}
                   className={`cursor-pointer p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center ${
                     selectedRole === "TENANT"
@@ -226,9 +239,11 @@ export default function RegisterPage() {
                   <User className="w-6 h-6 mb-2" />
                   <span className="font-bold text-sm">Tenant</span>
                   <span className="text-[10px] mt-1 opacity-80">Looking for a home</span>
-                </div>
+                </motion.div>
 
-                <div
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setValue("role", "LANDLORD")}
                   className={`cursor-pointer p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center ${
                     selectedRole === "LANDLORD"
@@ -239,7 +254,7 @@ export default function RegisterPage() {
                   <Shield className="w-6 h-6 mb-2" />
                   <span className="font-bold text-sm">Landlord</span>
                   <span className="text-[10px] mt-1 opacity-80">Own properties to list</span>
-                </div>
+                </motion.div>
               </div>
               {errors.role && (
                 <p className="mt-1.5 text-xs text-red-500 ml-1">
@@ -265,7 +280,7 @@ export default function RegisterPage() {
             </Button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }

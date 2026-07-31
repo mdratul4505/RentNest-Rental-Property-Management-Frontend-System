@@ -28,7 +28,7 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
+    <section className="py-24 bg-white dark:bg-slate-950 relative overflow-hidden transition-colors duration-300">
       {/* Decorative Orbs */}
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
@@ -38,11 +38,11 @@ export default function Testimonials() {
           <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3.5 py-1.5 rounded-full">
             Reviews
           </span>
-          <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight transition-colors">
             Loved by Landlords <br />
             and Tenants <span className="text-primary">alike</span>
           </h2>
-          <p className="text-slate-500 font-medium text-sm md:text-base">
+          <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-base transition-colors">
             See what our verified customers say about their digital rental journey with RentNest.
           </p>
         </div>
@@ -52,10 +52,10 @@ export default function Testimonials() {
           {list.map((item, idx) => (
             <div
               key={idx}
-              className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-[0_15px_30px_rgba(0,0,0,0.03)] hover:-translate-y-1.5 transition-all duration-300 relative group flex flex-col justify-between"
+              className="bg-slate-50/50 dark:bg-slate-900/40 p-8 rounded-3xl border border-slate-100 dark:border-slate-800/80 hover:bg-white dark:hover:bg-slate-900 hover:shadow-[0_15px_30px_rgba(0,0,0,0.03)] dark:hover:shadow-[0_15px_30px_rgba(0,0,0,0.2)] hover:-translate-y-1.5 transition-all duration-300 relative group flex flex-col justify-between"
             >
               {/* Quote icon */}
-              <Quote className="absolute top-6 right-8 w-12 h-12 text-slate-200/50 group-hover:text-primary/10 transition-colors duration-300 shrink-0" />
+              <Quote className="absolute top-6 right-8 w-12 h-12 text-slate-200/50 dark:text-slate-800/30 group-hover:text-primary/10 transition-colors duration-300 shrink-0" />
 
               <div>
                 {/* Rating stars */}
@@ -64,29 +64,29 @@ export default function Testimonials() {
                     <Star
                       key={sIdx}
                       className={`w-4 h-4 ${
-                        sIdx < item.stars ? "text-orange-400 fill-orange-400" : "text-slate-200"
+                        sIdx < item.stars ? "text-orange-400 fill-orange-400" : "text-slate-200 dark:text-slate-800"
                       }`}
                     />
                   ))}
                 </div>
 
-                <p className="text-slate-500 text-sm font-medium leading-relaxed italic mb-8 relative z-10">
+                <p className="text-slate-500 dark:text-slate-350 text-sm font-medium leading-relaxed italic mb-8 relative z-10 transition-colors">
                   &ldquo;{item.comment}&rdquo;
                 </p>
               </div>
 
               {/* User details */}
-              <div className="flex items-center gap-3.5 border-t border-slate-100 pt-5">
+              <div className="flex items-center gap-3.5 border-t border-slate-100 dark:border-slate-800 pt-5">
                 <img
                   src={item.image}
                   alt={item.name}
                   className="w-11 h-11 rounded-full object-cover shadow-sm group-hover:scale-105 transition-transform duration-300"
                 />
                 <div>
-                  <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors duration-300">
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm group-hover:text-primary transition-colors duration-300">
                     {item.name}
                   </h4>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                  <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider transition-colors">
                     {item.role}
                   </p>
                 </div>

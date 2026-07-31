@@ -9,16 +9,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/service/logout";
-import { LayoutDashboard, LogOut, User, Home, Building2, Info, Phone } from "lucide-react";
+import { LayoutDashboard, LogOut, User, Home, Building2, Info, Phone, Sun, Moon } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
+import { useState, useEffect } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Navbar({ user }: { user: any }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   // Helper to determine active link
   const isActive = (href: string) => pathname === href;
@@ -27,6 +29,30 @@ export function Navbar({ user }: { user: any }) {
   const isUserLoggedIn = user && user.success && user.data?.user;
   const userData = user.data?.user;
   const userRole = userData?.role?.toUpperCase();
+
+  // Initialize theme from localStorage or system setting
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const initialTheme = savedTheme || systemTheme;
+    setTheme(initialTheme);
+    if (initialTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    localStorage.setItem("theme", nextTheme);
+    if (nextTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  };
 
   // Resolve dashboard URL
   let dashboardUrl = "/auth/login";
@@ -44,15 +70,15 @@ export function Navbar({ user }: { user: any }) {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md transition-all duration-300">
+    <nav className="sticky top-0 z-50 w-full border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/85 backdrop-blur-md transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="shrink-0 flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-primary transition-colors duration-300">
+            <div className="w-9 h-9 rounded-xl bg-slate-900 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary transition-colors duration-300">
               <Building2 className="w-5 h-5 text-white" />
             </div>
-            <span className="text-2xl font-black text-slate-900 tracking-tight group-hover:text-primary transition-colors">
+            <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-primary transition-colors">
               RentNest<span className="text-orange-500">.</span>
             </span>
           </Link>
@@ -64,7 +90,7 @@ export function Navbar({ user }: { user: any }) {
               className={`text-sm font-semibold transition-all duration-200 py-1.5 px-3 rounded-lg flex items-center gap-1.5 ${
                 isActive("/")
                   ? "text-primary bg-primary/5"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
               }`}
             >
               <Home className="w-4 h-4" /> 🏠 Home
@@ -75,7 +101,7 @@ export function Navbar({ user }: { user: any }) {
               className={`text-sm font-semibold transition-all duration-200 py-1.5 px-3 rounded-lg flex items-center gap-1.5 ${
                 isActive("/properties")
                   ? "text-primary bg-primary/5"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
               }`}
             >
               <Building2 className="w-4 h-4" /> 🏢 Properties
@@ -86,7 +112,7 @@ export function Navbar({ user }: { user: any }) {
               className={`text-sm font-semibold transition-all duration-200 py-1.5 px-3 rounded-lg flex items-center gap-1.5 ${
                 isActive("/about")
                   ? "text-primary bg-primary/5"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
               }`}
             >
               <Info className="w-4 h-4" /> ℹ️ About
@@ -97,7 +123,7 @@ export function Navbar({ user }: { user: any }) {
               className={`text-sm font-semibold transition-all duration-200 py-1.5 px-3 rounded-lg flex items-center gap-1.5 ${
                 isActive("/contact")
                   ? "text-primary bg-primary/5"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
               }`}
             >
               <Phone className="w-4 h-4" /> 📞 Contact
@@ -109,7 +135,7 @@ export function Navbar({ user }: { user: any }) {
                 className={`text-sm font-semibold transition-all duration-200 py-1.5 px-3 rounded-lg flex items-center gap-1.5 ${
                   pathname.startsWith("/dashboard")
                     ? "text-primary bg-primary/5"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
                 }`}
               >
                 <LayoutDashboard className="w-4 h-4" /> Dashboard
@@ -119,33 +145,55 @@ export function Navbar({ user }: { user: any }) {
 
           {/* Right Action Menu */}
           <div className="flex items-center gap-4">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 text-slate-500 dark:text-slate-300 transition-colors border border-slate-200/40 dark:border-slate-700/60 cursor-pointer focus:outline-none"
+              aria-label="Toggle theme"
+            >
+              {theme === "light" ? <Moon className="w-4.5 h-4.5" /> : <Sun className="w-4.5 h-4.5 text-amber-400" />}
+            </button>
+
             {isUserLoggedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 p-1.5 pr-3 bg-slate-50 hover:bg-slate-100 border border-slate-200/60 rounded-full cursor-pointer transition-all duration-200 group focus:outline-none">
-                    {userData.image ? (
-                      <img
-                        src={userData.image}
-                        alt={userData.name}
-                        className="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-sm group-hover:scale-105 transition-transform duration-200"
-                      />
+                  <button className="flex items-center gap-2 p-1.5 pr-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700 rounded-full cursor-pointer transition-all duration-200 group focus:outline-none">
+                    {userData.image && userData.image !== "" && userData.image !== "null" && userData.image !== "undefined" ? (
+                      <>
+                        <img
+                          src={userData.image}
+                          alt={userData.name}
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                            const fallback = (e.target as HTMLElement).nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
+                          className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-sm group-hover:scale-105 transition-transform duration-200"
+                        />
+                        <div
+                          style={{ display: "none" }}
+                          className="w-8 h-8 rounded-full bg-slate-900 dark:bg-slate-700 text-white font-bold flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform duration-200"
+                        >
+                          {userData.name.charAt(0).toUpperCase()}
+                        </div>
+                      </>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform duration-200">
+                      <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-slate-700 text-white font-bold flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform duration-200">
                         {userData.name.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <span className="hidden sm:inline text-sm font-bold text-slate-700">
+                    <span className="hidden sm:inline text-sm font-bold text-slate-700 dark:text-slate-200">
                       {userData.name.split(" ")[0]}
                     </span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 mt-1.5 p-1 rounded-2xl border border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white animate-fade-in-up">
+                <DropdownMenuContent align="end" className="w-56 mt-1.5 p-1 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white dark:bg-slate-900 animate-fade-in-up">
                   <DropdownMenuLabel className="font-normal px-3.5 py-3">
                     <div className="flex flex-col gap-1.5">
-                      <p className="text-sm font-bold text-slate-800 leading-none">
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">
                         {userData.name}
                       </p>
-                      <p className="text-xs text-slate-400 font-medium leading-none">
+                      <p className="text-xs text-slate-400 dark:text-slate-400 font-medium leading-none">
                         {userData.email}
                       </p>
                       <span className="inline-flex self-start mt-1 text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
@@ -153,23 +201,23 @@ export function Navbar({ user }: { user: any }) {
                       </span>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-slate-100" />
+                  <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
                   
                   <DropdownMenuItem
                     onClick={() => router.push(dashboardUrl)}
-                    className="flex items-center px-3.5 py-2.5 rounded-xl cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                    className="flex items-center px-3.5 py-2.5 rounded-xl cursor-pointer text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    <LayoutDashboard className="w-4.5 h-4.5 mr-2.5 text-slate-400" />
+                    <LayoutDashboard className="w-4.5 h-4.5 mr-2.5 text-slate-400 dark:text-slate-500" />
                     <span className="text-sm font-medium">My Dashboard</span>
                   </DropdownMenuItem>
 
-                  <DropdownMenuSeparator className="bg-slate-100" />
+                  <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
                   
                   <DropdownMenuItem
                     onClick={handleLogout}
-                    className="flex items-center px-3.5 py-2.5 rounded-xl cursor-pointer text-red-500 hover:bg-red-50/50 hover:text-red-600 transition-colors"
+                    className="flex items-center px-3.5 py-2.5 rounded-xl cursor-pointer text-red-500 hover:bg-red-50/50 hover:text-red-600 dark:hover:bg-red-950/20 transition-colors"
                   >
-                    <LogOut className="w-4.5 h-4.5 mr-2.5 text-red-400" />
+                    <LogOut className="w-4.5 h-4.5 mr-2.5 text-red-400 dark:text-red-500" />
                     <span className="text-sm font-bold">Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -177,12 +225,12 @@ export function Navbar({ user }: { user: any }) {
             ) : (
               <div className="flex items-center gap-3">
                 <Link href="/auth/login" className="hidden sm:inline-block">
-                  <Button variant="ghost" className="font-bold text-slate-600 hover:text-slate-900">
+                  <Button variant="ghost" className="font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/auth/register">
-                  <Button className="bg-slate-900 hover:bg-slate-800 text-white rounded-full px-5 py-5 text-sm font-bold shadow-md hover:shadow-lg transition-all">
+                  <Button className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-full px-5 py-5 text-sm font-bold shadow-md hover:shadow-lg transition-all">
                     Register
                   </Button>
                 </Link>

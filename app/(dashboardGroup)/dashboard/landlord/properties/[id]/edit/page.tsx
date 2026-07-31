@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { use, useEffect, useState, useTransition } from "react";
@@ -112,7 +113,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
       const res = await updateLandlordProperty(propertyId, payload);
       if (res.success) {
         toast.success("Property updated successfully!");
-        router.push("/dashboard/landlord");
+        router.back();
         router.refresh();
       } else {
         toast.error(res.message || "Failed to update property. Please try again.");

@@ -10,6 +10,8 @@ import { useSearchParams } from "next/navigation";
 import { getProperties, getCategories } from "@/service/properties";
 import { getPropertyImage } from "@/components/home/FeaturedProperties";
 
+import PropertyCard from "@/components/shared/PropertyCard";
+
 export default function PropertiesPage() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
@@ -49,13 +51,13 @@ export default function PropertiesPage() {
       let minPrice = "";
       let maxPrice = "";
 
-      if (priceRange === "under1000") {
-        maxPrice = "1000";
-      } else if (priceRange === "1000to2000") {
-        minPrice = "1000";
-        maxPrice = "2000";
-      } else if (priceRange === "over2000") {
-        minPrice = "2000";
+      if (priceRange === "under10000") {
+        maxPrice = "10000";
+      } else if (priceRange === "10000to20000") {
+        minPrice = "10000";
+        maxPrice = "20000";
+      } else if (priceRange === "over20000") {
+        minPrice = "20000";
       }
 
       const params: any = {
@@ -90,14 +92,14 @@ export default function PropertiesPage() {
         
         {/* Sidebar Filters */}
         <div className="w-full lg:w-72 shrink-0 animate-fade-in-up">
-          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] sticky top-24">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800/80 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.2)] sticky top-24 transition-colors">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-150 flex items-center gap-2">
                 <Filter className="w-5 h-5 text-primary" /> Filters
               </h3>
               <button
                 onClick={handleResetFilters}
-                className="text-xs font-bold text-slate-400 hover:text-primary transition-colors flex items-center gap-1 focus:outline-none"
+                className="text-xs font-bold text-slate-400 hover:text-primary transition-colors flex items-center gap-1 focus:outline-none cursor-pointer"
               >
                 <RefreshCw className="w-3 h-3" /> Reset
               </button>
@@ -106,7 +108,7 @@ export default function PropertiesPage() {
             <div className="space-y-5">
               {/* Keyword search */}
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2 ml-1">
+                <label className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider block mb-2 ml-1">
                   Location / Keyword
                 </label>
                 <input
@@ -114,36 +116,36 @@ export default function PropertiesPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="e.g. Dhaka, Apartment..."
-                  className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-50 border border-slate-200 focus:border-primary/55 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white transition-all text-sm font-semibold"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-205 dark:border-slate-700 focus:border-primary/55 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white dark:focus:bg-slate-900 transition-all text-sm font-semibold"
                 />
               </div>
 
               {/* Price range */}
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2 ml-1">
+                <label className="text-xs font-bold text-slate-555 dark:text-slate-400 uppercase tracking-wider block mb-2 ml-1">
                   Monthly Rent
                 </label>
                 <select
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-50 border border-slate-200 focus:border-primary/55 rounded-xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white transition-all text-sm font-bold"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-205 dark:border-slate-700 focus:border-primary/55 rounded-xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white dark:focus:bg-slate-900 transition-all text-sm font-bold cursor-pointer"
                 >
                   <option value="any">Any Price</option>
-                  <option value="under1000">Under ৳1,000</option>
-                  <option value="1000to2000">৳1,000 - ৳2,000</option>
-                  <option value="over2000">Over ৳2,000</option>
+                  <option value="under10000">Under ৳10,000</option>
+                  <option value="10000to20000">৳10,000 - ৳20,000</option>
+                  <option value="over20000">Over ৳20,000</option>
                 </select>
               </div>
 
               {/* Property types / Category */}
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2 ml-1">
+                <label className="text-xs font-bold text-slate-555 dark:text-slate-400 uppercase tracking-wider block mb-2 ml-1">
                   Property Type
                 </label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-50 border border-slate-200 focus:border-primary/55 rounded-xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white transition-all text-sm font-bold"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-205 dark:border-slate-700 focus:border-primary/55 rounded-xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white dark:focus:bg-slate-900 transition-all text-sm font-bold cursor-pointer"
                 >
                   <option value="">Any Type</option>
                   {categories.map((cat) => (
@@ -157,7 +159,7 @@ export default function PropertiesPage() {
               <Button
                 onClick={handleApplyFilters}
                 disabled={isPending}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-6 font-bold transition-all shadow-md mt-2 flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl py-6 font-bold transition-all shadow-md mt-2 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 Apply Filters
@@ -168,12 +170,12 @@ export default function PropertiesPage() {
 
         {/* Property Grid */}
         <div className="flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 animate-fade-in-up">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Available Listings</h1>
-              <p className="text-slate-500 font-semibold text-sm mt-1">Explore and secure properties seamlessly</p>
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Available Listings</h1>
+              <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm mt-1">Explore and secure properties seamlessly</p>
             </div>
-            <p className="text-sm font-bold text-slate-500 bg-slate-100 px-3.5 py-1.5 rounded-full inline-flex self-start sm:self-auto">
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-3.5 py-1.5 rounded-full inline-flex self-start sm:self-auto border border-slate-200/20">
               {properties.length} {properties.length === 1 ? "result" : "results"}
             </p>
           </div>
@@ -181,83 +183,19 @@ export default function PropertiesPage() {
           {isInitialLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[1, 2, 3, 4].map((n) => (
-                <div key={n} className="bg-slate-50 rounded-3xl h-[450px] animate-pulse border border-slate-100" />
+                <div key={n} className="bg-slate-50 dark:bg-slate-900 rounded-3xl h-[450px] animate-pulse border border-slate-100 dark:border-slate-800/80" />
               ))}
             </div>
           ) : properties.length === 0 ? (
-            <div className="bg-white border border-slate-100 rounded-3xl p-16 text-center shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-              <p className="text-slate-400 font-bold text-lg mb-2">No Properties Found</p>
-              <p className="text-slate-400 text-sm max-w-xs mx-auto">Try resetting or modifying your filter parameters to see more listings.</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-3xl p-16 text-center shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+              <p className="text-slate-400 dark:text-slate-350 font-bold text-lg mb-2">No Properties Found</p>
+              <p className="text-slate-500 dark:text-slate-450 text-sm max-w-xs mx-auto">Try resetting or modifying your filter parameters to see more listings.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {properties.map((property, idx) => {
-                const imageUrl = getPropertyImage(property.id);
-                const bedrooms = (property.price > 12000) ? 3 : 2;
-                const bathrooms = (property.price > 15000) ? 2 : 1;
-                const sqft = bedrooms * 500 + 200;
-
-                return (
-                  <div
-                    key={property.id}
-                    className="bg-white rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 group border border-slate-100/80 flex flex-col animate-fade-in-up"
-                    style={{ animationDelay: `${(idx + 1) * 70}ms` }}
-                  >
-                    <div className="relative h-56 overflow-hidden bg-slate-100">
-                      <Image
-                        src={imageUrl}
-                        alt={property.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                      />
-                      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-full text-sm font-black text-slate-900 shadow-sm border border-slate-100">
-                        ৳{property.price.toLocaleString()}
-                        <span className="text-slate-500 font-medium text-xs">/mo</span>
-                      </div>
-                      {property.category && (
-                        <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full">
-                          {property.category.name}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="p-6 flex-1 flex flex-col">
-                      <div className="mb-4">
-                        <h3 className="text-xl font-bold text-slate-800 line-clamp-1 mb-1 group-hover:text-primary transition-colors">
-                          {property.title}
-                        </h3>
-                        <div className="flex items-center text-slate-400 text-xs font-semibold">
-                          <MapPin className="w-4 h-4 mr-1 text-orange-400 shrink-0" />
-                          {property.location}
-                        </div>
-                      </div>
-
-                      <p className="text-slate-400 text-sm line-clamp-2 mb-5 font-medium">
-                        {property.description}
-                      </p>
-
-                      <div className="flex items-center justify-between text-slate-500 text-xs font-bold py-3.5 border-t border-slate-100/80 mt-auto mb-4">
-                        <div className="flex items-center gap-1.5">
-                          <BedDouble className="w-4 h-4 text-slate-400" /> {bedrooms} Bed
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Bath className="w-4 h-4 text-slate-400" /> {bathrooms} Bath
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Square className="w-4 h-4 text-slate-400" /> {sqft} sqft
-                        </div>
-                      </div>
-
-                      <Link href={`/properties/${property.id}`} className="block w-full">
-                        <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-6 transition-all font-bold cursor-pointer text-sm shadow-sm">
-                          View Details
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
+              {properties.map((property, idx) => (
+                <PropertyCard key={property.id} property={property} index={idx} />
+              ))}
             </div>
           )}
         </div>

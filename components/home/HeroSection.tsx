@@ -4,6 +4,7 @@ import { Search, MapPin, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 export default function HeroSection() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -32,22 +33,42 @@ export default function HeroSection() {
             {/* Content */}
             <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 mt-16">
 
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-white/90 text-sm font-medium animate-fade-in-up">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-white/90 text-sm font-medium"
+                >
                     <span className="flex h-2 w-2 rounded-full bg-orange-500"></span>
                     Discover your next perfect home
-                </div>
+                </motion.div>
 
-                <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight animate-fade-in-up animation-delay-100">
+                <motion.h1 
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="text-5xl md:text-7xl font-extrabold text-white tracking-tight"
+                >
                     Find & List Rental <br className="hidden md:block" />
                     Properties <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-rose-400">with Ease</span>
-                </h1>
+                </motion.h1>
 
-                <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-300 animate-fade-in-up animation-delay-200 leading-relaxed">
+                <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="max-w-2xl mx-auto text-lg md:text-xl text-slate-300 leading-relaxed"
+                >
                     Join RentNest to explore top-tier locations, submit rental requests seamlessly, and manage your properties from one intuitive platform.
-                </p>
+                </motion.p>
 
                 {/* Search Bar Container */}
-                <div className="max-w-3xl mx-auto mt-10 animate-fade-in-up animation-delay-300">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="max-w-3xl mx-auto mt-10"
+                >
                     <form
                         onSubmit={handleSearch}
                         className="flex flex-col md:flex-row gap-3 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-2xl"
@@ -70,9 +91,14 @@ export default function HeroSection() {
                             Search
                         </Button>
                     </form>
-                </div>
+                </motion.div>
 
-                <div className="flex items-center justify-center gap-6 pt-6 animate-fade-in-up animation-delay-400">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                    className="flex items-center justify-center gap-6 pt-6"
+                >
                     <div className="flex items-center gap-2 text-white/80 text-sm font-medium">
                         <Home className="w-4 h-4 text-orange-400" />
                         10,000+ Properties
@@ -81,9 +107,10 @@ export default function HeroSection() {
                     <div className="flex items-center gap-2 text-white/80 text-sm font-medium">
                         <span className="font-bold text-orange-400">4.9/5</span> Average Rating
                     </div>
-                </div>
+                </motion.div>
 
             </div>
         </section>
     );
 }
+    

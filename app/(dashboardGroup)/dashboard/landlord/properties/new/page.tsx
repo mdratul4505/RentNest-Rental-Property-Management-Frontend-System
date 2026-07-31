@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
@@ -88,7 +89,8 @@ export default function NewPropertyPage() {
       const res = await createLandlordProperty(payload);
       if (res.success) {
         toast.success("Property listing created successfully!");
-        router.push("/dashboard/landlord");
+        // router.push("/dashboard/landlord");
+        router.back();
         router.refresh();
       } else {
         toast.error(res.message || "Failed to create property. Please try again.");

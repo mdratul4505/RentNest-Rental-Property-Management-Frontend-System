@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden py-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 relative overflow-hidden py-20 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
       {/* Background Orbs */}
       <div className="absolute top-10 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-float" />
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 animate-float" style={{ animationDelay: "2s" }} />
@@ -17,10 +17,10 @@ export default function AboutPage() {
           <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-4 py-2 rounded-full inline-flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" /> Our Journey
           </span>
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-none">
+          <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-none transition-colors">
             We are redefining the <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">Rental Experience</span>
           </h1>
-          <p className="text-slate-500 font-medium text-base md:text-lg leading-relaxed">
+          <p className="text-slate-500 dark:text-slate-400 font-medium text-base md:text-lg leading-relaxed transition-colors">
             RentNest was born out of a simple idea: to make finding and listing rental properties as seamless, transparent, and secure as possible. We connect verified tenants and premium landlords through cutting-edge technology.
           </p>
         </div>
@@ -51,21 +51,21 @@ export default function AboutPage() {
             return (
               <div
                 key={idx}
-                className="bg-white/80 backdrop-blur-md p-8 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:-translate-y-2 transition-all duration-300 group animate-fade-in-up"
+                className="bg-white/80 dark:bg-slate-900/40 backdrop-blur-md p-8 rounded-3xl border border-slate-100 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_15px_30px_rgba(0,0,0,0.2)] hover:-translate-y-2 transition-all duration-300 group animate-fade-in-up"
                 style={{ animationDelay: `${idx * 150}ms` }}
               >
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${item.color}`}>
                   <Icon className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-primary transition-colors">{item.title}</h3>
-                <p className="text-slate-500 text-sm font-medium leading-relaxed">{item.desc}</p>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-150 mb-3 group-hover:text-primary transition-colors">{item.title}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed transition-colors">{item.desc}</p>
               </div>
             );
-          })}
+          }).slice(0, 3)}
         </div>
 
         {/* Story Section */}
-        <div className="bg-white rounded-3xl p-8 md:p-16 border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.015)] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center animate-fade-in-up">
+        <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-8 md:p-16 border border-slate-100 dark:border-slate-800/80 shadow-[0_8px_30px_rgba(0,0,0,0.015)] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center animate-fade-in-up transition-colors duration-300">
           <div className="relative h-96 rounded-3xl overflow-hidden shadow-md">
             <img
               src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&q=80&w=1200"
@@ -80,23 +80,23 @@ export default function AboutPage() {
           </div>
 
           <div className="space-y-6">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight transition-colors">
               Why we started <span className="text-primary">RentNest.</span>
             </h2>
-            <p className="text-slate-500 font-medium text-sm md:text-base leading-relaxed">
+            <p className="text-slate-550 dark:text-slate-450 font-medium text-sm md:text-base leading-relaxed transition-colors">
               We realized that the traditional renting market was plagued by miscommunication, hidden fees, and unverified properties. It was exhausting for tenants and insecure for landlords. 
             </p>
-            <p className="text-slate-500 font-medium text-sm md:text-base leading-relaxed">
+            <p className="text-slate-550 dark:text-slate-450 font-medium text-sm md:text-base leading-relaxed transition-colors">
               By building a centralized portal equipped with advanced searching, verified landlord accounts, and safe transaction integrations (like Stripe), we created a community of trust that turns the chore of renting into a breeze.
             </p>
             <div className="pt-4 flex flex-wrap gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white">
+                <div className="w-10 h-10 rounded-full bg-slate-900 dark:bg-slate-800 flex items-center justify-center text-white">
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-slate-800">Top Rated 2026</h4>
-                  <p className="text-xs text-slate-400">Award-winning management</p>
+                  <h4 className="font-bold text-sm text-slate-850 dark:text-slate-200">Top Rated 2026</h4>
+                  <p className="text-xs text-slate-405 dark:text-slate-500">Award-winning management</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -104,8 +104,8 @@ export default function AboutPage() {
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-slate-800">10k+ Active Users</h4>
-                  <p className="text-xs text-slate-400">Landlords & Tenants trust us</p>
+                  <h4 className="font-bold text-sm text-slate-855 dark:text-slate-200">10k+ Active Users</h4>
+                  <p className="text-xs text-slate-405 dark:text-slate-500">Landlords & Tenants trust us</p>
                 </div>
               </div>
             </div>
@@ -113,10 +113,10 @@ export default function AboutPage() {
         </div>
 
         {/* Final CTA */}
-        <div className="text-center space-y-6 bg-slate-900 text-white rounded-3xl p-12 relative overflow-hidden animate-fade-in-up">
+        <div className="text-center space-y-6 bg-slate-900 dark:bg-slate-900 border border-transparent dark:border-slate-800/80 text-white rounded-3xl p-12 relative overflow-hidden animate-fade-in-up">
           <div className="absolute top-0 right-0 w-80 h-80 bg-orange-500/10 rounded-full blur-2xl translate-x-1/3 -translate-y-1/3" />
           <h2 className="text-3xl md:text-5xl font-black tracking-tight">Ready to find your nest?</h2>
-          <p className="text-slate-300 max-w-xl mx-auto text-sm md:text-base">
+          <p className="text-slate-350 dark:text-slate-300 max-w-xl mx-auto text-sm md:text-base">
             Explore premium rental properties matching your budget and lifestyle, or start listing your properties today.
           </p>
           <div className="pt-4 flex items-center justify-center gap-4">

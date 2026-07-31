@@ -180,17 +180,17 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors">
         <div className="text-center space-y-4">
           <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-          <p className="text-slate-400 font-bold text-sm">Loading admin console...</p>
+          <p className="text-slate-400 dark:text-slate-500 font-bold text-sm">Loading admin console...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950/20 flex transition-colors">
       {/* Sidebar for Premium Layout */}
       <aside className="hidden lg:flex w-64 bg-slate-900 flex-col justify-between shrink-0 p-6 text-white relative">
         <div className="space-y-8">
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
           <nav className="space-y-1">
             <button
               onClick={() => setActiveTab("users")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-all focus:outline-none ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-all focus:outline-none cursor-pointer ${
                 activeTab === "users" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"
               }`}
             >
@@ -213,7 +213,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("properties")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-all focus:outline-none ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-all focus:outline-none cursor-pointer ${
                 activeTab === "properties" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"
               }`}
             >
@@ -221,7 +221,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("rentals")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-all focus:outline-none ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-all focus:outline-none cursor-pointer ${
                 activeTab === "rentals" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"
               }`}
             >
@@ -243,10 +243,10 @@ export default function AdminDashboard() {
         {/* Top Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Admin Console
             </h1>
-            <p className="text-slate-400 text-xs sm:text-sm font-semibold mt-1">
+            <p className="text-slate-400 dark:text-slate-450 text-xs sm:text-sm font-semibold mt-1">
               Oversee users, listings, and global transactions of RentNest platform
             </p>
           </div>
@@ -261,55 +261,55 @@ export default function AdminDashboard() {
 
         {/* Global Statistics */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white p-6 rounded-3xl border border-slate-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 border border-amber-100 flex items-center justify-center shrink-0">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] flex items-center gap-4 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 text-amber-500 border border-amber-100 dark:border-amber-900/40 flex items-center justify-center shrink-0">
               <Users className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider leading-none mb-1">
                 Total Users
               </p>
-              <p className="text-2xl font-black text-slate-800 leading-none">{totalUsers}</p>
+              <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{totalUsers}</p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl border border-slate-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 border border-blue-100 flex items-center justify-center shrink-0">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] flex items-center gap-4 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 text-blue-500 border border-blue-100 dark:border-blue-900/40 flex items-center justify-center shrink-0">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider leading-none mb-1">
                 Total Listings
               </p>
-              <p className="text-2xl font-black text-slate-800 leading-none">{systemPropertiesCount}</p>
+              <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{systemPropertiesCount}</p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl border border-slate-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-500 border border-green-100 flex items-center justify-center shrink-0">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] flex items-center gap-4 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-950/30 text-green-500 border border-green-100 dark:border-green-900/40 flex items-center justify-center shrink-0">
               <ClipboardList className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider leading-none mb-1">
                 Rental Applications
               </p>
-              <p className="text-2xl font-black text-slate-800 leading-none">{totalBookingsCount}</p>
+              <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{totalBookingsCount}</p>
             </div>
           </div>
         </div>
 
         {/* Tab-driven Dashboard viewports */}
         {activeTab === "users" && (
-          <div className="bg-white rounded-3xl border border-slate-100/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up transition-colors">
             {/* Header controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h2 className="text-lg font-black text-slate-850 flex items-center gap-2">
+              <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" /> User Directory
               </h2>
 
               {/* Search bar */}
               <div className="relative max-w-sm w-full">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
                   <Search className="w-4 h-4" />
                 </span>
                 <input
@@ -320,21 +320,21 @@ export default function AdminDashboard() {
                     setUserSearch(e.target.value);
                     setCurrentPage(1); // reset to page 1 on search change
                   }}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-primary/45 rounded-xl text-xs font-semibold focus:outline-none transition-all"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:bg-white dark:focus:bg-slate-900 text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
                 />
               </div>
             </div>
 
             {/* Users directory table */}
             {currentUsersList.length === 0 ? (
-              <p className="text-slate-400 text-xs font-semibold italic text-center py-12">
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold italic text-center py-12">
                 No users found matching your search.
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
                       <th className="pb-3.5 pl-2">User details</th>
                       <th className="pb-3.5">Email</th>
                       <th className="pb-3.5">System Role</th>
@@ -342,38 +342,38 @@ export default function AdminDashboard() {
                       <th className="pb-3.5 pr-2 text-right">Moderate</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60">
                     {currentUsersList.map((userItem) => {
                       const isBlocked = userItem.status?.toUpperCase() === "BLOCKED";
 
                       return (
-                        <tr key={userItem.id} className="text-slate-600 text-xs font-semibold hover:bg-slate-50/50">
-                          <td className="py-4 pl-2 font-bold text-slate-800 text-sm">
+                        <tr key={userItem.id} className="text-slate-600 dark:text-slate-350 text-xs font-semibold hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="py-4 pl-2 font-bold text-slate-800 dark:text-slate-200 text-sm">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">
+                              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-705 dark:text-slate-300 font-bold flex items-center justify-center text-xs">
                                 <User className="w-3.5 h-3.5 text-slate-500" />
                               </div>
                               <span>{userItem.name}</span>
                             </div>
                           </td>
-                          <td className="py-4 text-slate-500">{userItem.email}</td>
+                          <td className="py-4 text-slate-500 dark:text-slate-400">{userItem.email}</td>
                           <td className="py-4">
-                            <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full font-bold text-[10px]">
+                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-300 px-2.5 py-0.5 rounded-full font-bold text-[10px]">
                               {userItem.role}
                             </span>
                           </td>
                           <td className="py-4">{getStatusBadge(userItem.status)}</td>
                           <td className="py-4 pr-2 text-right">
                             {userItem.role?.toUpperCase() === "ADMIN" ? (
-                              <span className="text-slate-400 text-[10px] font-bold italic">Immutable</span>
+                              <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold italic">Immutable</span>
                             ) : (
                               <Button
                                 onClick={() => handleToggleUserBan(userItem.id, userItem.status)}
                                 disabled={isPending}
                                 className={`text-[10px] font-extrabold h-7.5 px-3 rounded-lg shadow-sm cursor-pointer ${
                                   isBlocked
-                                    ? "bg-slate-900 hover:bg-slate-800 text-white"
-                                    : "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200/50"
+                                    ? "bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900"
+                                    : "bg-red-50 dark:bg-red-950 hover:bg-red-100 dark:hover:bg-red-900 text-red-650 dark:text-red-400 border border-red-200/50 dark:border-red-900/40"
                                 }`}
                               >
                                 {isBlocked ? (
@@ -396,8 +396,8 @@ export default function AdminDashboard() {
 
                 {/* Pagination Controls */}
                 {totalUserPages > 1 && (
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-6">
-                    <p className="text-[10px] font-semibold text-slate-400">
+                  <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
+                    <p className="text-[10px] font-semibold text-slate-405 dark:text-slate-500">
                       Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, filteredUsers.length)} of{" "}
                       {filteredUsers.length} users
                     </p>
@@ -406,18 +406,18 @@ export default function AdminDashboard() {
                         onClick={goToPrevPage}
                         disabled={currentPage === 1}
                         variant="outline"
-                        className="p-1 h-8 w-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+                        className="p-1 h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-50"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </Button>
-                      <span className="text-[11px] font-extrabold text-slate-700">
+                      <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300">
                         {currentPage} / {totalUserPages}
                       </span>
                       <Button
                         onClick={goToNextPage}
                         disabled={currentPage === totalUserPages}
                         variant="outline"
-                        className="p-1 h-8 w-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+                        className="p-1 h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-50"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </Button>
@@ -430,20 +430,20 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "properties" && (
-          <div className="bg-white rounded-3xl border border-slate-100/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up">
-            <h2 className="text-lg font-black text-slate-850 mb-5 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up transition-colors">
+            <h2 className="text-lg font-black text-slate-850 dark:text-white mb-5 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-primary" /> Listings Directory
             </h2>
 
             {properties.length === 0 ? (
-              <p className="text-slate-400 text-xs font-semibold italic text-center py-12">
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold italic text-center py-12">
                 No properties exist in the system.
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
                       <th className="pb-3.5 pl-2">Listing</th>
                       <th className="pb-3.5">Landlord</th>
                       <th className="pb-3.5">Location</th>
@@ -451,25 +451,25 @@ export default function AdminDashboard() {
                       <th className="pb-3.5">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60">
                     {properties.map((p) => (
-                      <tr key={p.id} className="text-slate-600 text-xs font-semibold hover:bg-slate-50/50">
-                        <td className="py-4 pl-2 font-bold text-slate-800 text-sm">{p.title}</td>
-                        <td className="py-4 text-slate-500">
+                      <tr key={p.id} className="text-slate-600 dark:text-slate-355 text-xs font-semibold hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="py-4 pl-2 font-bold text-slate-800 dark:text-slate-200 text-sm">{p.title}</td>
+                        <td className="py-4 text-slate-500 dark:text-slate-450">
                           <div>
-                            <p className="font-bold text-slate-700 leading-tight">{p.landlord?.name || "N/A"}</p>
-                            <p className="text-[9px] text-slate-400 mt-0.5 leading-none">{p.landlord?.email || "N/A"}</p>
+                            <p className="font-bold text-slate-700 dark:text-slate-200 leading-tight">{p.landlord?.name || "N/A"}</p>
+                            <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 leading-none">{p.landlord?.email || "N/A"}</p>
                           </div>
                         </td>
-                        <td className="py-4 text-slate-500">{p.location}</td>
-                        <td className="py-4 font-extrabold text-slate-800">৳{p.price.toLocaleString()}</td>
+                        <td className="py-4 text-slate-505 dark:text-slate-400">{p.location}</td>
+                        <td className="py-4 font-extrabold text-slate-800 dark:text-slate-100">৳{p.price.toLocaleString()}</td>
                         <td className="py-4">
                           {p.isAvailable ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 border border-green-200/50 px-2.5 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 dark:bg-green-950/20 border border-green-200/50 dark:border-green-900/40 px-2.5 py-0.5 rounded-full">
                               Available
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 px-2.5 py-0.5 rounded-full">
                               Rented
                             </span>
                           )}
@@ -484,20 +484,20 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "rentals" && (
-          <div className="bg-white rounded-3xl border border-slate-100/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up">
-            <h2 className="text-lg font-black text-slate-850 mb-5 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up transition-colors">
+            <h2 className="text-lg font-black text-slate-850 dark:text-white mb-5 flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-primary" /> System Rental Applications Log
             </h2>
 
             {rentals.length === 0 ? (
-              <p className="text-slate-400 text-xs font-semibold italic text-center py-12">
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold italic text-center py-12">
                 No rental applications exist in the system.
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
                       <th className="pb-3.5 pl-2">Tenant</th>
                       <th className="pb-3.5">Property Requested</th>
                       <th className="pb-3.5">Landlord</th>
@@ -506,29 +506,29 @@ export default function AdminDashboard() {
                       <th className="pb-3.5">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60">
                     {rentals.map((r) => {
                       const tenant = r.tenant || {};
                       const prop = r.property || {};
                       const landlord = prop.landlord || {};
 
                       return (
-                        <tr key={r.id} className="text-slate-600 text-xs font-semibold hover:bg-slate-50/50">
+                        <tr key={r.id} className="text-slate-600 dark:text-slate-355 text-xs font-semibold hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
                           <td className="py-4 pl-2">
                             <div>
-                              <p className="font-bold text-slate-800 leading-tight">{tenant.name || "N/A"}</p>
-                              <p className="text-[9px] text-slate-400 mt-0.5 leading-none">{tenant.email || "N/A"}</p>
+                              <p className="font-bold text-slate-800 dark:text-slate-200 leading-tight">{tenant.name || "N/A"}</p>
+                              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 leading-none">{tenant.email || "N/A"}</p>
                             </div>
                           </td>
-                          <td className="py-4 font-bold text-slate-700">{prop.title || "N/A"}</td>
-                          <td className="py-4 text-slate-500">
+                          <td className="py-4 font-bold text-slate-705 dark:text-slate-200">{prop.title || "N/A"}</td>
+                          <td className="py-4 text-slate-500 dark:text-slate-400">
                             <div>
-                              <p className="font-bold text-slate-700 leading-tight">{landlord.name || "N/A"}</p>
-                              <p className="text-[9px] text-slate-400 mt-0.5 leading-none">{landlord.email || "N/A"}</p>
+                              <p className="font-bold text-slate-707 dark:text-slate-200 leading-tight">{landlord.name || "N/A"}</p>
+                              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 leading-none">{landlord.email || "N/A"}</p>
                             </div>
                           </td>
-                          <td className="py-4 text-slate-500">{new Date(r.moveInDate).toLocaleDateString()}</td>
-                          <td className="py-4 font-extrabold text-slate-800">৳{prop.price ? prop.price.toLocaleString() : "0"}</td>
+                          <td className="py-4 text-slate-505 dark:text-slate-400">{new Date(r.moveInDate).toLocaleDateString()}</td>
+                          <td className="py-4 font-extrabold text-slate-800 dark:text-slate-100">৳{prop.price ? prop.price.toLocaleString() : "0"}</td>
                           <td className="py-4">{getRentalStatusBadge(r.status)}</td>
                         </tr>
                       );

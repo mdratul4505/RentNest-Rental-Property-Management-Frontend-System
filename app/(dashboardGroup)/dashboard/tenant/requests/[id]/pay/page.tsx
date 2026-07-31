@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { use, useEffect, useState, useTransition } from "react";
@@ -12,7 +13,7 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 // Initialize Stripe Publishable Key (using fallback matching backend's test account format)
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
-    "pk_test_51PwhP5K1YgB2xP9xf14GkMubR0dskhC8D3Jp39QYp9m7NlWkHq8gUa0vjI7E7R5V8x9Z1YmR2l3D4w"
+    "pk_test_51TxBIARRKBNMcCDtkP8LdiQpG1RIdbakPxlTXwdbbKh8zSUqBCegDwUaTdUmnpvAE1Zwpi7jCn7osijblkYhEDzs000orz0rwf"
 );
 
 // Stripe Checkout Form Component

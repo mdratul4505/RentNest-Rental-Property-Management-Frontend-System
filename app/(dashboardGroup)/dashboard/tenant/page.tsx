@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
@@ -143,10 +144,10 @@ export default function TenantDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors">
         <div className="text-center space-y-4">
           <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-          <p className="text-slate-400 font-bold text-sm">Loading dashboard data...</p>
+          <p className="text-slate-400 dark:text-slate-500 font-bold text-sm">Loading dashboard data...</p>
         </div>
       </div>
     );
@@ -160,7 +161,7 @@ export default function TenantDashboard() {
   const activeRentalsCount = rentals.filter((r) => r.status?.toUpperCase() === "ACTIVE").length;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950/20 flex transition-colors">
       {/* Sidebar for Premium Layout */}
       <aside className="hidden lg:flex w-64 bg-slate-900 flex-col justify-between shrink-0 p-6 text-white relative">
         <div className="space-y-8">
@@ -169,7 +170,7 @@ export default function TenantDashboard() {
               <Building2 className="w-6 h-6 text-orange-500" />
               <span className="text-xl font-black tracking-tight">RentNest.</span>
             </NextLink>
-            <p className="text-[10px] font-bold text-slate-400 mt-1">TENANT CONTROL PANEL</p>
+            <p className="text-[10px] font-bold text-slate-405 mt-1">TENANT CONTROL PANEL</p>
           </div>
 
           <nav className="space-y-1">
@@ -198,10 +199,10 @@ export default function TenantDashboard() {
         {/* Top bar header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Tenant Dashboard
             </h1>
-            <p className="text-slate-400 text-xs sm:text-sm font-semibold mt-1">
+            <p className="text-slate-400 dark:text-slate-400 text-xs sm:text-sm font-semibold mt-1">
               Manage your property applications, bookings, and payments
             </p>
           </div>
@@ -216,41 +217,41 @@ export default function TenantDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white p-6 rounded-3xl border border-slate-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 border border-amber-100 flex items-center justify-center shrink-0">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] flex items-center gap-4 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 text-amber-500 border border-amber-100 dark:border-amber-900/40 flex items-center justify-center shrink-0">
               <Calendar className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider leading-none mb-1">
                 Total Requests
               </p>
-              <p className="text-2xl font-black text-slate-800 leading-none">{rentals.length}</p>
+              <p className="text-2xl font-black text-slate-850 dark:text-white leading-none">{rentals.length}</p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl border border-slate-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-500 border border-green-100 flex items-center justify-center shrink-0">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] flex items-center gap-4 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-950/30 text-green-500 border border-green-100 dark:border-green-900/40 flex items-center justify-center shrink-0">
               <DollarSign className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider leading-none mb-1">
                 Total Paid
               </p>
-              <p className="text-2xl font-black text-slate-800 leading-none">
+              <p className="text-2xl font-black text-slate-850 dark:text-white leading-none">
                 ৳{totalPaidAmount.toLocaleString()}
               </p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl border border-slate-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 border border-blue-100 flex items-center justify-center shrink-0">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] flex items-center gap-4 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 text-blue-500 border border-blue-100 dark:border-blue-900/40 flex items-center justify-center shrink-0">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider leading-none mb-1">
                 Active Rentals
               </p>
-              <p className="text-2xl font-black text-slate-800 leading-none">{activeRentalsCount}</p>
+              <p className="text-2xl font-black text-slate-850 dark:text-white leading-none">{activeRentalsCount}</p>
             </div>
           </div>
         </div>
@@ -259,18 +260,18 @@ export default function TenantDashboard() {
         <div className="space-y-10 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
           
           {/* Rental Requests Section */}
-          <div className="bg-white rounded-3xl border border-slate-100/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)]">
-            <h2 className="text-lg font-black text-slate-850 mb-5 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] transition-colors">
+            <h2 className="text-lg font-black text-slate-850 dark:text-white mb-5 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" /> Rental Applications
             </h2>
 
             {rentals.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-slate-400 text-sm font-semibold italic">
+                <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold italic">
                   You have not submitted any rental requests yet.
                 </p>
                 <NextLink href="/properties" className="inline-block mt-4">
-                  <Button className="bg-slate-900 hover:bg-slate-800 text-white font-bold cursor-pointer rounded-xl px-5 text-xs py-4.5">
+                  <Button className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold cursor-pointer rounded-xl px-5 text-xs py-4.5">
                     Find Rental Properties
                   </Button>
                 </NextLink>
@@ -279,7 +280,7 @@ export default function TenantDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
                       <th className="pb-3.5 pl-2">Property</th>
                       <th className="pb-3.5">Move-In Date</th>
                       <th className="pb-3.5">Monthly Price</th>
@@ -287,33 +288,33 @@ export default function TenantDashboard() {
                       <th className="pb-3.5 pr-2 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60">
                     {rentals.map((rental) => {
                       const prop = rental.property || {};
                       const isApproved = rental.status?.toUpperCase() === "APPROVED";
                       const isActive = rental.status?.toUpperCase() === "ACTIVE";
 
                       return (
-                        <tr key={rental.id} className="text-slate-600 text-xs font-semibold group hover:bg-slate-50/50">
+                        <tr key={rental.id} className="text-slate-600 dark:text-slate-350 text-xs font-semibold group hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
                           <td className="py-4 pl-2">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/40 relative overflow-hidden">
+                              <div className="w-10 h-10 rounded-lg bg-slate-105 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-200/40 dark:border-slate-700/60 relative overflow-hidden">
                                 <Building2 className="w-5 h-5 text-slate-400" />
                               </div>
                               <div>
-                                <p className="font-bold text-slate-800 text-sm leading-tight group-hover:text-primary transition-colors">
+                                <p className="font-bold text-slate-800 dark:text-slate-200 text-sm leading-tight group-hover:text-primary transition-colors">
                                   {prop.title || "Unknown Property"}
                                 </p>
-                                <p className="text-[10px] text-slate-400 font-semibold mt-0.5 leading-none">
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5 leading-none">
                                   {prop.location || "N/A"}
                                 </p>
                               </div>
                             </div>
                           </td>
-                          <td className="py-4 font-semibold text-slate-500">
+                          <td className="py-4 font-semibold text-slate-500 dark:text-slate-400">
                             {new Date(rental.moveInDate).toLocaleDateString()}
                           </td>
-                          <td className="py-4 font-bold text-slate-800">
+                          <td className="py-4 font-bold text-slate-800 dark:text-slate-200">
                             ৳{prop.price ? prop.price.toLocaleString() : "0"}
                           </td>
                           <td className="py-4">{getStatusBadge(rental.status)}</td>
@@ -328,13 +329,13 @@ export default function TenantDashboard() {
                             {isActive && (
                               <Button
                                 onClick={() => openReviewModal(prop.id, prop.title)}
-                                className="bg-slate-900 hover:bg-slate-800 text-white font-bold cursor-pointer rounded-xl px-4 text-[10px] h-8 shadow-sm"
+                                className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold cursor-pointer rounded-xl px-4 text-[10px] h-8 shadow-sm"
                               >
                                 Leave Review
                               </Button>
                             )}
                             {!isApproved && !isActive && (
-                              <span className="text-slate-400 text-[10px] font-bold italic">No Actions</span>
+                              <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold italic">No Actions</span>
                             )}
                           </td>
                         </tr>
@@ -347,20 +348,20 @@ export default function TenantDashboard() {
           </div>
 
           {/* Payment History Section */}
-          <div className="bg-white rounded-3xl border border-slate-100/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-            <h2 className="text-lg font-black text-slate-855 mb-5 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] transition-colors" style={{ animationDelay: "200ms" }}>
+            <h2 className="text-lg font-black text-slate-855 dark:text-white mb-5 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-primary" /> Payment History
             </h2>
 
             {payments.length === 0 ? (
-              <p className="text-slate-400 text-xs font-semibold italic text-center py-8">
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold italic text-center py-8">
                 No payment history available.
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
                       <th className="pb-3.5 pl-2">Transaction ID</th>
                       <th className="pb-3.5">Property</th>
                       <th className="pb-3.5">Provider / Method</th>
@@ -369,36 +370,36 @@ export default function TenantDashboard() {
                       <th className="pb-3.5 pr-2 text-right">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60">
                     {payments.map((payment) => {
                       const pStatus = payment.status?.toUpperCase();
                       const isCompleted = pStatus === "COMPLETED";
 
                       return (
-                        <tr key={payment.id} className="text-slate-600 text-xs font-semibold hover:bg-slate-50/50">
-                          <td className="py-4 pl-2 font-mono text-[10px] text-slate-500 select-all">
+                        <tr key={payment.id} className="text-slate-600 dark:text-slate-350 text-xs font-semibold hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="py-4 pl-2 font-mono text-[10px] text-slate-500 dark:text-slate-400 select-all">
                             {payment.transactionId}
                           </td>
-                          <td className="py-4 text-slate-700 font-bold">
+                          <td className="py-4 text-slate-700 dark:text-slate-200 font-bold">
                             {payment.rental?.property?.title || "Rental Payment"}
                           </td>
-                          <td className="py-4 text-slate-500">
+                          <td className="py-4 text-slate-500 dark:text-slate-400">
                             {payment.provider} ({payment.method || "card"})
                           </td>
-                          <td className="py-4 font-extrabold text-slate-800">
+                          <td className="py-4 font-extrabold text-slate-800 dark:text-slate-100">
                             ৳{payment.amount.toLocaleString()}
                           </td>
-                          <td className="py-4 text-slate-400 font-medium">
+                          <td className="py-4 text-slate-400 dark:text-slate-500 font-medium">
                             {payment.paidAt ? new Date(payment.paidAt).toLocaleDateString() : new Date(payment.createdAt).toLocaleDateString()}
                           </td>
                           <td className="py-4 pr-2 text-right">
                             <span
                               className={`inline-flex items-center text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
                                 isCompleted
-                                  ? "text-green-600 bg-green-50 border border-green-200/50"
+                                  ? "text-green-600 bg-green-50 dark:bg-green-950/20 border border-green-200/50 dark:border-green-900/40"
                                   : pStatus === "FAILED"
-                                  ? "text-red-600 bg-red-50 border border-red-200/50"
-                                  : "text-amber-600 bg-amber-50 border border-amber-200/50"
+                                  ? "text-red-600 bg-red-50 dark:bg-red-950/20 border border-red-200/50 dark:border-red-900/40"
+                                  : "text-amber-600 bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40"
                               }`}
                             >
                               {pStatus}
@@ -418,25 +419,25 @@ export default function TenantDashboard() {
       {/* Leave Review Modal */}
       {isReviewModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl border border-slate-100 max-w-md w-full p-6 shadow-2xl relative animate-scale-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 max-w-md w-full p-6 shadow-2xl relative animate-scale-in transition-colors">
             <button
               onClick={() => setIsReviewModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 font-bold text-lg focus:outline-none cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold text-lg focus:outline-none cursor-pointer"
             >
               ✕
             </button>
 
-            <h3 className="text-xl font-black text-slate-800 mb-1 flex items-center gap-2">
+            <h3 className="text-xl font-black text-slate-800 dark:text-white mb-1 flex items-center gap-2 transition-colors">
               <MessageSquare className="w-5 h-5 text-primary" /> Leave a Review
             </h3>
-            <p className="text-slate-500 text-xs font-semibold mb-6">
-              Share your experience at <span className="font-bold text-slate-800">{reviewPropertyName}</span>.
+            <p className="text-slate-500 dark:text-slate-450 text-xs font-semibold mb-6 transition-colors">
+              Share your experience at <span className="font-bold text-slate-800 dark:text-white">{reviewPropertyName}</span>.
             </p>
 
             <form onSubmit={handleReviewSubmit} className="space-y-4">
               {/* Rating selection (Stars) */}
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2.5 ml-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2.5 ml-1 transition-colors">
                   Rating (1-5 Stars)
                 </label>
                 <div className="flex gap-2">
@@ -451,7 +452,7 @@ export default function TenantDashboard() {
                         className={`w-8 h-8 ${
                           star <= rating
                             ? "text-yellow-400 fill-current"
-                            : "text-slate-200"
+                            : "text-slate-200 dark:text-slate-800"
                         }`}
                       />
                     </button>
@@ -461,7 +462,7 @@ export default function TenantDashboard() {
 
               {/* Comment text area */}
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5 ml-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5 ml-1 transition-colors">
                   Review Comment
                 </label>
                 <textarea
@@ -470,7 +471,7 @@ export default function TenantDashboard() {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Tell us what you liked or disliked about this property..."
-                  className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-50 border border-slate-200 focus:border-primary/55 rounded-xl text-slate-850 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white transition-all text-xs font-semibold"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-805 border border-slate-200 dark:border-slate-700 focus:border-primary/55 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white dark:focus:bg-slate-900 transition-all text-xs font-semibold"
                 />
               </div>
 
@@ -478,7 +479,7 @@ export default function TenantDashboard() {
                 <Button
                   type="submit"
                   disabled={isPending}
-                  className="w-full py-6 text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-6 text-sm font-bold bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                   Submit Review

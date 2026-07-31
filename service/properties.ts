@@ -61,7 +61,7 @@ export const createRentalRequest = async (payload: { propertyId: string; moveInD
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ body: payload }), // backend validates body inside 'body' object
+      body: JSON.stringify(payload),
     });
 
     const result = await res.json();
