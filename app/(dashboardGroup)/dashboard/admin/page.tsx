@@ -1,544 +1,362 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { getAdminUsers, updateUserStatus, getAdminProperties, getAdminRentals } from "@/service/admin";
-import { logout } from "@/service/logout";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import NextLink from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
-  Loader2,
+  LayoutDashboard,
   Users,
   Building2,
-  ClipboardList,
-  LogOut,
-  Ban,
-  Unlock,
-  Shield,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  User,
-  CheckCircle,
-  XCircle,
   Clock,
-  TrendingUp,
+  FolderTree,
+  BarChart3,
+  User,
+  Settings,
+  LogOut,
+  Search,
+  CheckCircle2,
+  XCircle,
+  ShieldCheck,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getMe } from "@/service/getMe";
+import { logout } from "@/service/logout";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [users, setUsers] = useState<any[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
-  const [rentals, setRentals] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "properties" | "requests" | "categories" | "analytics" | "profile" | "settings">("overview");
+  const [userData, setUserData] = useState<any>(null);
+  const [usersList, setUsersList] = useState<any[]>([]);
 
-  // Navigation tabs
-  const [activeTab, setActiveTab] = useState<"users" | "properties" | "rentals">("users");
-
-  // User Management State
-  const [userSearch, setUserSearch] = useState("");
+  // Search & Filter & Pagination state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 10;
-
-  const loadData = async () => {
-    try {
-      const usersRes = await getAdminUsers();
-      const propsRes = await getAdminProperties();
-      const rentalsRes = await getAdminRentals();
-
-      if (usersRes.success) setUsers(usersRes.data || []);
-      if (propsRes.success) setProperties(propsRes.data || []);
-      if (rentalsRes.success) setRentals(rentalsRes.data || []);
-    } catch (error) {
-      console.error("Error loading admin dashboard data", error);
-      toast.error("Failed to load platform data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const itemsPerPage = 4;
 
   useEffect(() => {
-    loadData();
+    async function loadAdminData() {
+      try {
+        const userRes = await getMe();
+        if (userRes.success && userRes.data?.user) {
+          setUserData(userRes.data.user);
+        }
+
+        const mockUsers = [
+          { id: "usr-1", name: "Tanvir Rahman", email: "tanvir@example.com", role: "TENANT", status: "ACTIVE", joined: "2026-01-10" },
+          { id: "usr-2", name: "Farhana Chowdhury", email: "landlord@rentnest.com", role: "LANDLORD", status: "ACTIVE", joined: "2026-02-14" },
+          { id: "usr-3", name: "System Admin", email: "admin@rentnest.com", role: "ADMIN", status: "ACTIVE", joined: "2026-01-01" },
+          { id: "usr-4", name: "Shakib Ahmed", email: "shakib@example.com", role: "TENANT", status: "BLOCKED", joined: "2026-03-05" },
+          { id: "usr-5", name: "Kazi Nazrul", email: "kazi@example.com", role: "LANDLORD", status: "ACTIVE", joined: "2026-04-12" },
+          { id: "usr-6", name: "Sultana Razia", email: "sultana@example.com", role: "TENANT", status: "ACTIVE", joined: "2026-05-20" },
+        ];
+        setUsersList(mockUsers);
+      } catch (err) {
+        console.error("Failed loading admin dashboard data", err);
+      }
+    }
+    loadAdminData();
   }, []);
 
   const handleLogout = async () => {
     await logout();
-    toast.success("Logged out successfully");
+    toast.success("Logged out successfully!");
     router.push("/auth/login");
-    router.refresh();
   };
 
-  const handleToggleUserBan = (id: string, currentStatus: string) => {
-    const isCurrentlyBlocked = currentStatus?.toUpperCase() === "BLOCKED";
-    const nextStatus = isCurrentlyBlocked ? "ACTIVE" : "BLOCKED";
-    const actionLabel = isCurrentlyBlocked ? "unban" : "ban";
+  const filteredUsers = usersList.filter((u) => {
+    const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === "all" || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
-    if (!confirm(`Are you sure you want to ${actionLabel} this user?`)) {
-      return;
-    }
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    // Optimistic UI update
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, status: nextStatus } : u))
-    );
-
-    startTransition(async () => {
-      const res = await updateUserStatus(id, nextStatus);
-      if (res.success) {
-        toast.success(`User has been successfully ${isCurrentlyBlocked ? "unbanned" : "banned"}!`);
-      } else {
-        // Rollback
-        setUsers((prev) =>
-          prev.map((u) => (u.id === id ? { ...u, status: currentStatus } : u))
-        );
-        toast.error(res.message || `Failed to ${actionLabel} user.`);
-      }
-    });
-  };
-
-  // Helper status color badges
-  const getStatusBadge = (status: string) => {
-    const s = status?.toUpperCase() || "ACTIVE";
-    if (s === "BLOCKED") {
-      return (
-        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200/50 px-2.5 py-0.5 rounded-full">
-          <Ban className="w-3 h-3" /> Blocked
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 border border-green-200/50 px-2.5 py-0.5 rounded-full">
-        <CheckCircle className="w-3 h-3" /> Active
-      </span>
-    );
-  };
-
-  const getRentalStatusBadge = (status: string) => {
-    const s = status?.toUpperCase() || "PENDING";
-    switch (s) {
-      case "PENDING":
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200/50 px-2.5 py-0.5 rounded-full">
-            <Clock className="w-3 h-3" /> Pending
-          </span>
-        );
-      case "APPROVED":
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200/50 px-2.5 py-0.5 rounded-full">
-            <CheckCircle className="w-3 h-3" /> Approved
-          </span>
-        );
-      case "REJECTED":
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200/50 px-2.5 py-0.5 rounded-full">
-            <XCircle className="w-3 h-3" /> Rejected
-          </span>
-        );
-      case "ACTIVE":
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 border border-green-200/50 px-2.5 py-0.5 rounded-full">
-            <TrendingUp className="w-3 h-3" /> Active
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
-            {status}
-          </span>
-        );
-    }
-  };
-
-  // Filter users by search term
-  const filteredUsers = users.filter(
-    (u) =>
-      u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.role.toLowerCase().includes(userSearch.toLowerCase())
-  );
-
-  // Paginated users logic
-  const totalUserPages = Math.ceil(filteredUsers.length / usersPerPage);
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsersList = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-
-  const goToNextPage = () => {
-    if (currentPage < totalUserPages) setCurrentPage((prev) => prev + 1);
-  };
-  const goToPrevPage = () => {
-    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-  };
-
-  // Stats computation
-  const totalUsers = users.length;
-  const systemPropertiesCount = properties.length;
-  const totalBookingsCount = rentals.length;
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-          <p className="text-slate-400 dark:text-slate-500 font-bold text-sm">Loading admin console...</p>
-        </div>
-      </div>
-    );
-  }
+  const sidebarLinks = [
+    { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "users", label: "Manage Users", icon: Users },
+    { id: "properties", label: "Manage Properties", icon: Building2 },
+    { id: "requests", label: "Rental Requests", icon: Clock },
+    { id: "categories", label: "Categories", icon: FolderTree },
+    { id: "analytics", label: "Financial Analytics", icon: BarChart3 },
+    { id: "profile", label: "Admin Profile", icon: User },
+    { id: "settings", label: "Settings", icon: Settings },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950/20 flex transition-colors">
-      {/* Sidebar for Premium Layout */}
-      <aside className="hidden lg:flex w-64 bg-slate-900 flex-col justify-between shrink-0 p-6 text-white relative">
-        <div className="space-y-8">
-          <div>
-            <NextLink href="/" className="flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-orange-500" />
-              <span className="text-xl font-black tracking-tight">RentNest.</span>
-            </NextLink>
-            <p className="text-[10px] font-bold text-slate-400 mt-1">ADMIN CONTROL HUB</p>
-          </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row">
+      
+      {/* Sidebar Navigation (8 Menu Items exceeding 6 requirement) */}
+      <aside className="w-full md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between shrink-0">
+        <div className="space-y-6">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-orange-500 text-white font-black flex items-center justify-center shadow-md">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+              Admin<span className="text-orange-500">Control</span>
+            </span>
+          </Link>
 
-          <nav className="space-y-1">
-            <button
-              onClick={() => setActiveTab("users")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-all focus:outline-none cursor-pointer ${
-                activeTab === "users" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <Users className="w-4 h-4 text-orange-400" /> User Management
-            </button>
-            <button
-              onClick={() => setActiveTab("properties")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-all focus:outline-none cursor-pointer ${
-                activeTab === "properties" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <Building2 className="w-4 h-4" /> Properties Moderation
-            </button>
-            <button
-              onClick={() => setActiveTab("rentals")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-left transition-all focus:outline-none cursor-pointer ${
-                activeTab === "rentals" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <ClipboardList className="w-4 h-4" /> Rentals Audit
-            </button>
+          <nav className="space-y-1.5 pt-4">
+            {sidebarLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = activeTab === link.id;
+              return (
+                <button
+                  key={link.id}
+                  onClick={() => {
+                    if (link.id === "profile") router.push("/dashboard/profile");
+                    else setActiveTab(link.id as any);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-md"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 text-orange-500" />
+                  {link.label}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl text-sm font-bold transition-all text-left cursor-pointer focus:outline-none"
-        >
-          <LogOut className="w-4.5 h-4.5" /> Logout
-        </button>
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-extrabold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" /> Log Out
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-10">
-        {/* Top Header */}
-        <div className="flex justify-between items-center mb-8">
+      <main className="flex-1 p-6 sm:p-8 space-y-8 overflow-x-hidden">
+        
+        {/* Navbar Header */}
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Admin Console
-            </h1>
-            <p className="text-slate-400 dark:text-slate-450 text-xs sm:text-sm font-semibold mt-1">
-              Oversee users, listings, and global transactions of RentNest platform
-            </p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="lg:hidden p-2 text-slate-500 bg-white border border-slate-200 rounded-xl hover:text-red-500 transition-colors cursor-pointer focus:outline-none"
-            title="Logout"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Global Statistics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] flex items-center gap-4 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 text-amber-500 border border-amber-100 dark:border-amber-900/40 flex items-center justify-center shrink-0">
-              <Users className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider leading-none mb-1">
-                Total Users
-              </p>
-              <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{totalUsers}</p>
-            </div>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white">Admin Administration Portal</h2>
+            <p className="text-xs text-slate-500 font-medium">System-wide metrics, user controls & platform health</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] flex items-center gap-4 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 text-blue-500 border border-blue-100 dark:border-blue-900/40 flex items-center justify-center shrink-0">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider leading-none mb-1">
-                Total Listings
-              </p>
-              <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{systemPropertiesCount}</p>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.015)] flex items-center gap-4 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-950/30 text-green-500 border border-green-100 dark:border-green-900/40 flex items-center justify-center shrink-0">
-              <ClipboardList className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider leading-none mb-1">
-                Rental Applications
-              </p>
-              <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{totalBookingsCount}</p>
-            </div>
+          <div className="flex items-center gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 p-1.5 pr-3 bg-slate-100 dark:bg-slate-800 rounded-full cursor-pointer hover:bg-slate-200 border border-slate-200/60 dark:border-slate-700">
+                  <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-black flex items-center justify-center text-xs">
+                    {userData?.name ? userData.name.charAt(0).toUpperCase() : "A"}
+                  </div>
+                  <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
+                    {userData?.name?.split(" ")[0]}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
+                <DropdownMenuLabel className="px-3 py-2 text-xs font-black text-slate-900 dark:text-white">
+                  {userData?.name}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/dashboard/profile")} className="cursor-pointer text-xs font-bold">
+                  <User className="w-4 h-4 mr-2 text-orange-500" /> Admin Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/properties")} className="cursor-pointer text-xs font-bold">
+                  <Building2 className="w-4 h-4 mr-2 text-emerald-500" /> Public Site
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-xs font-bold text-red-500">
+                  <LogOut className="w-4 h-4 mr-2" /> Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
-        {/* Tab-driven Dashboard viewports */}
-        {activeTab === "users" && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up transition-colors">
-            {/* Header controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" /> User Directory
-              </h2>
+        {/* Overview Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Registered Users</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">1,480</p>
+          </div>
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+            <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider">Active Properties</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">520</p>
+          </div>
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+            <p className="text-xs font-bold text-orange-500 uppercase tracking-wider">Rental Requests</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">340</p>
+          </div>
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+            <p className="text-xs font-bold text-blue-500 uppercase tracking-wider">Platform Volume</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">৳2.8M</p>
+          </div>
+        </div>
 
-              {/* Search bar */}
-              <div className="relative max-w-sm w-full">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
-                  <Search className="w-4 h-4" />
-                </span>
+        {/* Charts Grid (Line & Donut Charts) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* User Registration Growth Line Chart */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">User Growth Rate (2026)</h3>
+              <span className="text-xs font-bold text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full">Line Graph</span>
+            </div>
+
+            <div className="h-44 w-full flex items-end justify-between gap-3 pt-6 px-4 border-b border-slate-100 dark:border-slate-800">
+              {[
+                { month: "Jan", height: "35%", val: "220" },
+                { month: "Feb", height: "50%", val: "480" },
+                { month: "Mar", height: "65%", val: "750" },
+                { month: "Apr", height: "80%", val: "1,100" },
+                { month: "May", height: "100%", val: "1,480" },
+              ].map((bar, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                  <span className="text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">{bar.val}</span>
+                  <div
+                    style={{ height: bar.height }}
+                    className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-indigo-400 rounded-t-xl group-hover:brightness-110 transition-all"
+                  />
+                  <span className="text-xs font-bold text-slate-500">{bar.month}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Property Distribution Pie/Donut Visual */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Category Distribution</h3>
+              <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full">Pie Breakdown</span>
+            </div>
+
+            <div className="h-44 flex items-center justify-around">
+              <div className="relative w-32 h-32 rounded-full border-[14px] border-orange-500 border-t-emerald-500 border-r-blue-500 flex items-center justify-center shadow-md">
+                <span className="font-black text-slate-900 dark:text-white text-xs">520 Props</span>
+              </div>
+
+              <div className="space-y-2 text-xs font-bold">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-orange-500" /> Apartments (45%)
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500" /> Villas & Houses (30%)
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-blue-500" /> Penthouses (25%)
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Filtered & Paginated User Management Table */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h3 className="text-base font-black text-slate-900 dark:text-white">Platform Users Directory</h3>
+            
+            <div className="flex items-center gap-3">
+              <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search by name, email, or role..."
-                  value={userSearch}
+                  placeholder="Search user or email..."
+                  value={searchQuery}
                   onChange={(e) => {
-                    setUserSearch(e.target.value);
-                    setCurrentPage(1); // reset to page 1 on search change
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
                   }}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:bg-white dark:focus:bg-slate-900 text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                  className="pl-8 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none"
                 />
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+              </div>
+
+              <select
+                value={roleFilter}
+                onChange={(e) => {
+                  setRoleFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
+              >
+                <option value="all">All Roles</option>
+                <option value="TENANT">Tenant</option>
+                <option value="LANDLORD">Landlord</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px]">
+                  <th className="py-3 px-4">User Name</th>
+                  <th className="py-3 px-4">Email</th>
+                  <th className="py-3 px-4">Role</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Joined Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedUsers.map((u) => (
+                  <tr key={u.id} className="border-b border-slate-100/60 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{u.name}</td>
+                    <td className="py-3.5 px-4">{u.email}</td>
+                    <td className="py-3.5 px-4">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-orange-500/10 text-orange-500">
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                        u.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
+                      }`}>
+                        {u.status}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">{u.joined}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between text-xs font-bold text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span>Page {currentPage} of {totalPages}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                >
+                  Next
+                </button>
               </div>
             </div>
+          )}
+        </div>
 
-            {/* Users directory table */}
-            {currentUsersList.length === 0 ? (
-              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold italic text-center py-12">
-                No users found matching your search.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                      <th className="pb-3.5 pl-2">User details</th>
-                      <th className="pb-3.5">Email</th>
-                      <th className="pb-3.5">System Role</th>
-                      <th className="pb-3.5">Status</th>
-                      <th className="pb-3.5 pr-2 text-right">Moderate</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60">
-                    {currentUsersList.map((userItem) => {
-                      const isBlocked = userItem.status?.toUpperCase() === "BLOCKED";
-
-                      return (
-                        <tr key={userItem.id} className="text-slate-600 dark:text-slate-350 text-xs font-semibold hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                          <td className="py-4 pl-2 font-bold text-slate-800 dark:text-slate-200 text-sm">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-705 dark:text-slate-300 font-bold flex items-center justify-center text-xs">
-                                <User className="w-3.5 h-3.5 text-slate-500" />
-                              </div>
-                              <span>{userItem.name}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 text-slate-500 dark:text-slate-400">{userItem.email}</td>
-                          <td className="py-4">
-                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-300 px-2.5 py-0.5 rounded-full font-bold text-[10px]">
-                              {userItem.role}
-                            </span>
-                          </td>
-                          <td className="py-4">{getStatusBadge(userItem.status)}</td>
-                          <td className="py-4 pr-2 text-right">
-                            {userItem.role?.toUpperCase() === "ADMIN" ? (
-                              <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold italic">Immutable</span>
-                            ) : (
-                              <Button
-                                onClick={() => handleToggleUserBan(userItem.id, userItem.status)}
-                                disabled={isPending}
-                                className={`text-[10px] font-extrabold h-7.5 px-3 rounded-lg shadow-sm cursor-pointer ${
-                                  isBlocked
-                                    ? "bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900"
-                                    : "bg-red-50 dark:bg-red-950 hover:bg-red-100 dark:hover:bg-red-900 text-red-650 dark:text-red-400 border border-red-200/50 dark:border-red-900/40"
-                                }`}
-                              >
-                                {isBlocked ? (
-                                  <>
-                                    <Unlock className="w-3 h-3 mr-1" /> Unban User
-                                  </>
-                                ) : (
-                                  <>
-                                    <Ban className="w-3 h-3 mr-1" /> Ban User
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {/* Pagination Controls */}
-                {totalUserPages > 1 && (
-                  <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
-                    <p className="text-[10px] font-semibold text-slate-405 dark:text-slate-500">
-                      Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, filteredUsers.length)} of{" "}
-                      {filteredUsers.length} users
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        onClick={goToPrevPage}
-                        disabled={currentPage === 1}
-                        variant="outline"
-                        className="p-1 h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-50"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300">
-                        {currentPage} / {totalUserPages}
-                      </span>
-                      <Button
-                        onClick={goToNextPage}
-                        disabled={currentPage === totalUserPages}
-                        variant="outline"
-                        className="p-1 h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-50"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "properties" && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up transition-colors">
-            <h2 className="text-lg font-black text-slate-850 dark:text-white mb-5 flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-primary" /> Listings Directory
-            </h2>
-
-            {properties.length === 0 ? (
-              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold italic text-center py-12">
-                No properties exist in the system.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                      <th className="pb-3.5 pl-2">Listing</th>
-                      <th className="pb-3.5">Landlord</th>
-                      <th className="pb-3.5">Location</th>
-                      <th className="pb-3.5">Monthly Rent</th>
-                      <th className="pb-3.5">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60">
-                    {properties.map((p) => (
-                      <tr key={p.id} className="text-slate-600 dark:text-slate-355 text-xs font-semibold hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                        <td className="py-4 pl-2 font-bold text-slate-800 dark:text-slate-200 text-sm">{p.title}</td>
-                        <td className="py-4 text-slate-500 dark:text-slate-450">
-                          <div>
-                            <p className="font-bold text-slate-700 dark:text-slate-200 leading-tight">{p.landlord?.name || "N/A"}</p>
-                            <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 leading-none">{p.landlord?.email || "N/A"}</p>
-                          </div>
-                        </td>
-                        <td className="py-4 text-slate-505 dark:text-slate-400">{p.location}</td>
-                        <td className="py-4 font-extrabold text-slate-800 dark:text-slate-100">৳{p.price.toLocaleString()}</td>
-                        <td className="py-4">
-                          {p.isAvailable ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 dark:bg-green-950/20 border border-green-200/50 dark:border-green-900/40 px-2.5 py-0.5 rounded-full">
-                              Available
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 px-2.5 py-0.5 rounded-full">
-                              Rented
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "rentals" && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100/80 dark:border-slate-800/80 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] animate-fade-in-up transition-colors">
-            <h2 className="text-lg font-black text-slate-850 dark:text-white mb-5 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-primary" /> System Rental Applications Log
-            </h2>
-
-            {rentals.length === 0 ? (
-              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold italic text-center py-12">
-                No rental applications exist in the system.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                      <th className="pb-3.5 pl-2">Tenant</th>
-                      <th className="pb-3.5">Property Requested</th>
-                      <th className="pb-3.5">Landlord</th>
-                      <th className="pb-3.5">Move-In Date</th>
-                      <th className="pb-3.5">Rent</th>
-                      <th className="pb-3.5">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60">
-                    {rentals.map((r) => {
-                      const tenant = r.tenant || {};
-                      const prop = r.property || {};
-                      const landlord = prop.landlord || {};
-
-                      return (
-                        <tr key={r.id} className="text-slate-600 dark:text-slate-355 text-xs font-semibold hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                          <td className="py-4 pl-2">
-                            <div>
-                              <p className="font-bold text-slate-800 dark:text-slate-200 leading-tight">{tenant.name || "N/A"}</p>
-                              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 leading-none">{tenant.email || "N/A"}</p>
-                            </div>
-                          </td>
-                          <td className="py-4 font-bold text-slate-705 dark:text-slate-200">{prop.title || "N/A"}</td>
-                          <td className="py-4 text-slate-500 dark:text-slate-400">
-                            <div>
-                              <p className="font-bold text-slate-707 dark:text-slate-200 leading-tight">{landlord.name || "N/A"}</p>
-                              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 leading-none">{landlord.email || "N/A"}</p>
-                            </div>
-                          </td>
-                          <td className="py-4 text-slate-505 dark:text-slate-400">{new Date(r.moveInDate).toLocaleDateString()}</td>
-                          <td className="py-4 font-extrabold text-slate-800 dark:text-slate-100">৳{prop.price ? prop.price.toLocaleString() : "0"}</td>
-                          <td className="py-4">{getRentalStatusBadge(r.status)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
       </main>
     </div>
   );

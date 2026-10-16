@@ -83,28 +83,9 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/register", request.url));
   }
 
-  // Redirect authenticated users trying to access login/register to their dashboard
-  if (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register")) {
-    if (accessToken) {
-      const decoded = decodeJwt(accessToken);
-      if (decoded && decoded.role) {
-        const userRole = decoded.role.toUpperCase();
-        if (userRole === "TENANT") {
-          return NextResponse.redirect(new URL("/dashboard/tenant", request.url));
-        }
-        if (userRole === "LANDLORD") {
-          return NextResponse.redirect(new URL("/dashboard/landlord", request.url));
-        }
-        if (userRole === "ADMIN") {
-          return NextResponse.redirect(new URL("/dashboard/admin", request.url));
-        }
-      }
-    }
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/auth/login", "/auth/register", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/login", "/register"],
 };

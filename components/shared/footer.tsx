@@ -1,131 +1,215 @@
-"use client"
-import Link from "next/link"
-import { AtSign, MessageCircle, Globe, Send } from "lucide-react"
-import { Button } from "@/components/ui/button"
+"use client";
 
-const footerLinks = [
-  {
-    title: "Product",
-    links: [
-      { label: "Features", href: "#" },
-      { label: "Pricing", href: "#" },
-      { label: "Integrations", href: "#" },
-      { label: "Changelog", href: "#" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About", href: "#" },
-      { label: "Blog", href: "#" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "#" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { label: "Documentation", href: "#" },
-      { label: "Help Center", href: "#" },
-      { label: "Community", href: "#" },
-      { label: "Status", href: "#" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
-      { label: "Security", href: "#" },
-      { label: "Cookies", href: "#" },
-    ],
-  },
-]
+import Link from "next/link";
+import { Building2, Mail, Phone, MapPin, Send, Heart, Globe, Share2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
 
-const socialLinks = [
-  { label: "Twitter", href: "#", icon: AtSign },
-  { label: "Community", href: "#", icon: MessageCircle },
-  { label: "Website", href: "#", icon: Globe },
-]
+export function Footer() {
+  const [email, setEmail] = useState("");
 
-export function SiteFooter() {
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    toast.success("Subscribed to RentNest Newsletter!", {
+      description: "You'll receive our latest listing updates and real estate insights.",
+    });
+    setEmail("");
+  };
+
   return (
-    <footer className="border-t border-border bg-card text-card-foreground">
-      <div className="mx-auto w-full max-w-6xl px-4 py-12 md:px-6 lg:py-16">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
-          {/* Brand + newsletter */}
-          <div className="flex flex-col gap-6 lg:col-span-4">
-            <Link href="/" className="flex items-center gap-2" aria-label="Home">
-              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white">
-                <Globe className="h-5 w-5" />
+    <footer className="bg-slate-950 text-slate-300 pt-16 pb-8 border-t border-slate-800/80 relative overflow-hidden">
+      {/* Glow Effects */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800/80">
+          
+          {/* Brand Info (Col 1 & 2) */}
+          <div className="lg:col-span-2 space-y-5">
+            <Link href="/" className="inline-flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-slate-800 via-primary to-orange-500 flex items-center justify-center shadow-lg">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-black text-white tracking-tight">
+                RentNest<span className="text-orange-500">.</span>
               </span>
-              <span className="text-lg font-bold">RentNest<span className="text-orange-500">.</span></span>
             </Link>
-            <p className="max-w-sm text-sm leading-relaxed text-muted-foreground text-pretty">
-              RentNest makes it easy for landlords to list properties and for tenants to find their dream home with secure booking and Stripe payments.
+            
+            <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-sm">
+              RentNest is Bangladesh&apos;s premier rental platform connecting tenants with verified landlords effortlessly. Find, request, and manage rentals with total peace of mind.
             </p>
 
-            <form
-              className="flex w-full max-w-sm items-center gap-2"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <label htmlFor="footer-email" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="footer-email"
-                type="email"
-                required
-                placeholder="Enter your email"
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring/50 transition focus-visible:ring-2"
-              />
-              <Button type="submit" size="icon" className="h-10 w-10 shrink-0" aria-label="Subscribe">
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
+            {/* Contact details */}
+            <div className="space-y-2.5 pt-2 text-xs font-semibold text-slate-400">
+              <div className="flex items-center gap-3">
+                <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
+                <span>Gulshan Avenue, Block SE, Dhaka-1212, Bangladesh</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone className="w-4 h-4 text-orange-500 shrink-0" />
+                <span>+880 1700-123456 / +880 2-9876543</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Mail className="w-4 h-4 text-orange-500 shrink-0" />
+                <span>support@rentnest.com.bd</span>
+              </div>
+            </div>
           </div>
 
-          {/* Link columns */}
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:col-span-8">
-            {footerLinks.map((column) => (
-              <div key={column.title} className="flex flex-col gap-4">
-                <h3 className="text-sm font-semibold">{column.title}</h3>
-                <ul className="flex flex-col gap-3">
-                  {column.links.map((link) => (
-                    <li key={link.label}>
-                      <Link
-                        href={link.href}
-                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+          {/* Quick Navigation Links */}
+          <div className="space-y-4">
+            <h4 className="text-white font-extrabold text-sm uppercase tracking-wider">Navigation</h4>
+            <ul className="space-y-2.5 text-xs font-bold text-slate-400">
+              <li>
+                <Link href="/" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › Home Page
+                </Link>
+              </li>
+              <li>
+                <Link href="/properties" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › Browse Properties
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › About RentNest
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › Housing Blog
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › Contact Support
+                </Link>
+              </li>
+            </ul>
           </div>
+
+          {/* User & Portals */}
+          <div className="space-y-4">
+            <h4 className="text-white font-extrabold text-sm uppercase tracking-wider">Portals</h4>
+            <ul className="space-y-2.5 text-xs font-bold text-slate-400">
+              <li>
+                <Link href="/auth/login" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › Tenant Sign In
+                </Link>
+              </li>
+              <li>
+                <Link href="/auth/register" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › Landlord Registration
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/tenant" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › Tenant Portal
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/landlord" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › Landlord Portal
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  › Terms & Safety
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Newsletter Box */}
+          <div className="space-y-4">
+            <h4 className="text-white font-extrabold text-sm uppercase tracking-wider">Stay Informed</h4>
+            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+              Subscribe to get notified about new luxury listings & tenant tips.
+            </p>
+
+            <form onSubmit={handleSubscribe} className="space-y-2">
+              <div className="relative">
+                <input
+                  type="email"
+                  placeholder="Enter your email..."
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-xs focus:outline-none focus:border-orange-500 font-medium"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg text-xs font-bold hover:opacity-90 transition-opacity flex items-center justify-center cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+
+            {/* Social Icons with Inline SVGs */}
+            <div className="pt-2">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Connect With Us</p>
+              <div className="flex items-center gap-2">
+                {/* Facebook */}
+                <motion.a
+                  whileHover={{ scale: 1.15, y: -2 }}
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-orange-500 transition-colors"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </motion.a>
+                
+                {/* Twitter / X */}
+                <motion.a
+                  whileHover={{ scale: 1.15, y: -2 }}
+                  href="https://twitter.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-orange-500 transition-colors"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </motion.a>
+
+                {/* LinkedIn */}
+                <motion.a
+                  whileHover={{ scale: 1.15, y: -2 }}
+                  href="https://linkedin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-orange-500 transition-colors"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.74a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2z"/>
+                  </svg>
+                </motion.a>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
-          <p className="text-sm text-muted-foreground">
-            {`© ${new Date().getFullYear()} RentNest. All rights reserved.`}
-          </p>
-          <div className="flex items-center gap-2">
-            {socialLinks.map(({ label, href, icon: Icon }) => (
-              <Link
-                key={label}
-                href={href}
-                aria-label={label}
-                className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                <Icon className="h-4 w-4" />
-              </Link>
-            ))}
+        {/* Footer Bottom Credit */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
+          <p>© {new Date().getFullYear()} RentNest Bangladesh Inc. All rights reserved.</p>
+          <div className="flex items-center gap-1">
+            Made with <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 mx-0.5 animate-pulse" /> for modern living.
           </div>
         </div>
       </div>
     </footer>
-  )
+  );
 }
+
+export const SiteFooter = Footer;
+

@@ -3,24 +3,37 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Filter, BedDouble, Bath, Square, Loader2, RefreshCw } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { MapPin, Filter, RefreshCw, Star, BedDouble, ArrowUpDown, ChevronLeft, ChevronRight, SlidersHorizontal, Grid, List } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { getProperties, getCategories } from "@/service/properties";
-import { getPropertyImage } from "@/components/home/FeaturedProperties";
-
 import PropertyCard from "@/components/shared/PropertyCard";
+import PropertyCardSkeleton from "@/components/shared/PropertyCardSkeleton";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function PropertiesPage() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
 
-  const [properties, setProperties] = useState<any[]>([]);
+  const [rawProperties, setRawProperties] = useState<any[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  
+  // Filter States (5 fields: Search, Category, Price, Rating, Bedrooms)
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [priceRange, setPriceRange] = useState("any");
+  const [minRating, setMinRating] = useState("any");
+  const [bedrooms, setBedrooms] = useState("any");
+  
+  // Sorting State
+  const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "rating">("newest");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  // View state
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isPending, startTransition] = useTransition();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
@@ -29,13 +42,11 @@ export default function PropertiesPage() {
     async function loadData() {
       try {
         const catRes = await getCategories();
-        if (catRes.success) {
-          setCategories(catRes.data || []);
-        }
+        if (catRes.success) setCategories(catRes.data || []);
 
         const propRes = await getProperties({ searchTerm: initialSearch });
         if (propRes.success) {
-          setProperties(propRes.data || []);
+          setRawProperties(propRes.data || []);
         }
       } catch (err) {
         console.error("Failed to load browse properties data", err);
@@ -46,108 +57,154 @@ export default function PropertiesPage() {
     loadData();
   }, [initialSearch]);
 
-  const handleApplyFilters = () => {
-    startTransition(async () => {
-      let minPrice = "";
-      let maxPrice = "";
+  // Apply filters, sorting, and pagination locally / dynamically
+  useEffect(() => {
+    let result = [...rawProperties];
 
-      if (priceRange === "under10000") {
-        maxPrice = "10000";
-      } else if (priceRange === "10000to20000") {
-        minPrice = "10000";
-        maxPrice = "20000";
-      } else if (priceRange === "over20000") {
-        minPrice = "20000";
-      }
+    // 1. Search term
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.title?.toLowerCase().includes(term) ||
+          p.location?.toLowerCase().includes(term) ||
+          p.description?.toLowerCase().includes(term)
+      );
+    }
 
-      const params: any = {
-        searchTerm,
-        categoryId: selectedCategory,
-        minPrice,
-        maxPrice,
-      };
+    // 2. Category
+    if (selectedCategory) {
+      result = result.filter((p) => p.categoryId === selectedCategory || p.category?.id === selectedCategory);
+    }
 
-      const res = await getProperties(params);
-      if (res.success) {
-        setProperties(res.data || []);
-      }
-    });
-  };
+    // 3. Price range
+    if (priceRange === "under10000") {
+      result = result.filter((p) => p.price <= 10000);
+    } else if (priceRange === "10000to20000") {
+      result = result.filter((p) => p.price >= 10000 && p.price <= 20000);
+    } else if (priceRange === "over20000") {
+      result = result.filter((p) => p.price >= 20000);
+    }
+
+    // 4. Rating filter
+    if (minRating !== "any") {
+      const targetRating = parseFloat(minRating);
+      result = result.filter((p) => (p.rating || 4.5) >= targetRating);
+    }
+
+    // 5. Bedrooms filter
+    if (bedrooms !== "any") {
+      const reqBeds = parseInt(bedrooms);
+      result = result.filter((p) => {
+        const pBeds = p.price > 12000 ? 3 : 2;
+        return pBeds >= reqBeds;
+      });
+    }
+
+    // Sorting
+    if (sortBy === "price-asc") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-desc") {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "rating") {
+      result.sort((a, b) => (b.rating || 4.8) - (a.rating || 4.8));
+    } else {
+      // newest
+      result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    }
+
+    setFilteredProperties(result);
+    setCurrentPage(1); // Reset to page 1 on filter/sort change
+  }, [rawProperties, searchTerm, selectedCategory, priceRange, minRating, bedrooms, sortBy]);
 
   const handleResetFilters = () => {
     setSearchTerm("");
     setSelectedCategory("");
     setPriceRange("any");
-    startTransition(async () => {
-      const res = await getProperties({});
-      if (res.success) {
-        setProperties(res.data || []);
-      }
-    });
+    setMinRating("any");
+    setBedrooms("any");
+    setSortBy("newest");
   };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative min-h-[600px]">
-      <div className="flex flex-col lg:flex-row gap-10">
-        
-        {/* Sidebar Filters */}
-        <div className="w-full lg:w-72 shrink-0 animate-fade-in-up">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800/80 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.2)] sticky top-24 transition-colors">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-150 flex items-center gap-2">
-                <Filter className="w-5 h-5 text-primary" /> Filters
-              </h3>
-              <button
-                onClick={handleResetFilters}
-                className="text-xs font-bold text-slate-400 hover:text-primary transition-colors flex items-center gap-1 focus:outline-none cursor-pointer"
-              >
-                <RefreshCw className="w-3 h-3" /> Reset
-              </button>
-            </div>
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredProperties.length / itemsPerPage) || 1;
+  const paginatedProperties = filteredProperties.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-            <div className="space-y-5">
-              {/* Keyword search */}
+  const activeFilterCount = [
+    searchTerm !== "",
+    selectedCategory !== "",
+    priceRange !== "any",
+    minRating !== "any",
+    bedrooms !== "any",
+  ].filter(Boolean).length;
+
+  return (
+    <div className="bg-slate-50/50 dark:bg-slate-950 min-h-screen py-12 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+            Explore Rental Properties
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">
+            Filter, compare, and request verified apartments and houses in Bangladesh.
+          </p>
+        </div>
+
+        {/* Layout Container */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* Sidebar Filter Card */}
+          <aside className="w-full lg:w-80 shrink-0">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm sticky top-24 space-y-6">
+              
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-orange-500" /> Filters
+                  {activeFilterCount > 0 && (
+                    <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-black flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </h3>
+                
+                <button
+                  onClick={handleResetFilters}
+                  className="text-xs font-bold text-slate-400 hover:text-orange-500 transition-colors flex items-center gap-1 cursor-pointer focus:outline-none"
+                >
+                  <RefreshCw className="w-3 h-3" /> Reset
+                </button>
+              </div>
+
+              {/* 1. Keyword / Location Search */}
               <div>
-                <label className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider block mb-2 ml-1">
+                <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-2">
                   Location / Keyword
                 </label>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="e.g. Dhaka, Apartment..."
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-205 dark:border-slate-700 focus:border-primary/55 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white dark:focus:bg-slate-900 transition-all text-sm font-semibold"
+                  placeholder="Search Dhaka, Gulshan, Villa..."
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs font-bold transition-all"
                 />
               </div>
 
-              {/* Price range */}
+              {/* 2. Category Select */}
               <div>
-                <label className="text-xs font-bold text-slate-555 dark:text-slate-400 uppercase tracking-wider block mb-2 ml-1">
-                  Monthly Rent
-                </label>
-                <select
-                  value={priceRange}
-                  onChange={(e) => setPriceRange(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-205 dark:border-slate-700 focus:border-primary/55 rounded-xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white dark:focus:bg-slate-900 transition-all text-sm font-bold cursor-pointer"
-                >
-                  <option value="any">Any Price</option>
-                  <option value="under10000">Under ৳10,000</option>
-                  <option value="10000to20000">৳10,000 - ৳20,000</option>
-                  <option value="over20000">Over ৳20,000</option>
-                </select>
-              </div>
-
-              {/* Property types / Category */}
-              <div>
-                <label className="text-xs font-bold text-slate-555 dark:text-slate-400 uppercase tracking-wider block mb-2 ml-1">
-                  Property Type
+                <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-2">
+                  Property Category
                 </label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-205 dark:border-slate-700 focus:border-primary/55 rounded-xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white dark:focus:bg-slate-900 transition-all text-sm font-bold cursor-pointer"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs font-bold cursor-pointer transition-all"
                 >
-                  <option value="">Any Type</option>
+                  <option value="">All Categories</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -156,48 +213,153 @@ export default function PropertiesPage() {
                 </select>
               </div>
 
-              <Button
-                onClick={handleApplyFilters}
-                disabled={isPending}
-                className="w-full bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl py-6 font-bold transition-all shadow-md mt-2 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                Apply Filters
-              </Button>
-            </div>
-          </div>
-        </div>
+              {/* 3. Monthly Rent Range */}
+              <div>
+                <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-2">
+                  Monthly Rent Range
+                </label>
+                <select
+                  value={priceRange}
+                  onChange={(e) => setPriceRange(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs font-bold cursor-pointer transition-all"
+                >
+                  <option value="any">Any Rent Price</option>
+                  <option value="under10000">Under ৳10,000 / mo</option>
+                  <option value="10000to20000">৳10,000 - ৳20,000 / mo</option>
+                  <option value="over20000">Over ৳20,000 / mo</option>
+                </select>
+              </div>
 
-        {/* Property Grid */}
-        <div className="flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-            <div>
-              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Available Listings</h1>
-              <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm mt-1">Explore and secure properties seamlessly</p>
-            </div>
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-3.5 py-1.5 rounded-full inline-flex self-start sm:self-auto border border-slate-200/20">
-              {properties.length} {properties.length === 1 ? "result" : "results"}
-            </p>
-          </div>
+              {/* 4. Minimum Rating Filter */}
+              <div>
+                <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-2">
+                  Minimum Rating
+                </label>
+                <select
+                  value={minRating}
+                  onChange={(e) => setMinRating(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs font-bold cursor-pointer transition-all"
+                >
+                  <option value="any">Any Rating</option>
+                  <option value="4.5">⭐ 4.5 Stars & Above</option>
+                  <option value="4.0">⭐ 4.0 Stars & Above</option>
+                  <option value="3.5">⭐ 3.5 Stars & Above</option>
+                </select>
+              </div>
 
-          {isInitialLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {[1, 2, 3, 4].map((n) => (
-                <div key={n} className="bg-slate-50 dark:bg-slate-900 rounded-3xl h-[450px] animate-pulse border border-slate-100 dark:border-slate-800/80" />
-              ))}
+              {/* 5. Bedrooms Filter */}
+              <div>
+                <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-2">
+                  Bedrooms
+                </label>
+                <select
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs font-bold cursor-pointer transition-all"
+                >
+                  <option value="any">Any Bedrooms</option>
+                  <option value="2">2+ Bedrooms</option>
+                  <option value="3">3+ Bedrooms</option>
+                </select>
+              </div>
+
             </div>
-          ) : properties.length === 0 ? (
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-3xl p-16 text-center shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-              <p className="text-slate-400 dark:text-slate-350 font-bold text-lg mb-2">No Properties Found</p>
-              <p className="text-slate-500 dark:text-slate-450 text-sm max-w-xs mx-auto">Try resetting or modifying your filter parameters to see more listings.</p>
+          </aside>
+
+          {/* Main Listing Grid & Controls */}
+          <main className="flex-1 space-y-6">
+            
+            {/* Top Toolbar (Sort, View Mode, Result Count) */}
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+              
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                Showing <span className="text-slate-900 dark:text-white font-black">{filteredProperties.length}</span> properties found
+              </p>
+
+              {/* Sort Selector */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-orange-500" /> Sort by:
+                </div>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-bold text-xs focus:outline-none cursor-pointer"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="rating">Highest Rated</option>
+                </select>
+              </div>
+
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {properties.map((property, idx) => (
-                <PropertyCard key={property.id} property={property} index={idx} />
-              ))}
-            </div>
-          )}
+
+            {/* Property Cards Grid (Minimum 3 per row on Desktop: lg:grid-cols-3) */}
+            {isInitialLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <PropertyCardSkeleton key={n} />
+                ))}
+              </div>
+            ) : paginatedProperties.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-16 text-center shadow-sm space-y-4">
+                <p className="text-slate-400 font-bold text-lg">No Properties Match Your Filter Criteria</p>
+                <p className="text-slate-500 text-xs max-w-sm mx-auto">
+                  Try clearing some filter fields or expanding your price range to view more options.
+                </p>
+                <Button onClick={handleResetFilters} className="bg-slate-900 text-white rounded-2xl font-bold text-xs">
+                  Reset All Filters
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedProperties.map((property, idx) => (
+                  <PropertyCard key={property.id} property={property} index={idx} />
+                ))}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-8">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 cursor-pointer font-bold text-xs flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Previous
+                </button>
+
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-10 h-10 rounded-2xl font-black text-xs transition-all cursor-pointer ${
+                        currentPage === pageNum
+                          ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-md"
+                          : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 cursor-pointer font-bold text-xs flex items-center gap-1"
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+          </main>
+
         </div>
       </div>
     </div>

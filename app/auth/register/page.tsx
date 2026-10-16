@@ -10,10 +10,9 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { Loader2, Mail, Lock, User, Shield, Image as ImageIcon, Link as LinkIcon, Upload } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Mail, Lock, User, Shield, Building2, ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
 
-// Form validation schema matching backend constraints
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -29,7 +28,6 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const {
     register,
@@ -68,217 +66,151 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-slate-100/80 relative z-10"
+        transition={{ duration: 0.5 }}
+        className="max-w-md w-full space-y-6 bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-800 relative z-10"
       >
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 text-orange-500" /> Go Back
+          </button>
+          
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+            Registration Portal
+          </span>
+        </div>
+
         <div className="text-center">
-          <Link href="/" className="inline-block mb-4">
-            <span className="text-3xl font-black text-primary tracking-tight">
+          <Link href="/" className="inline-flex items-center gap-2 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-slate-900 via-primary to-orange-500 flex items-center justify-center text-white shadow-md">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               RentNest<span className="text-orange-500">.</span>
             </span>
           </Link>
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            Create an account
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            Create an Account
           </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Already have an account?{" "}
+          <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Already registered?{" "}
             <Link
               href="/auth/login"
-              className="font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="font-extrabold text-orange-500 hover:text-orange-600 transition-colors"
             >
               Sign in
             </Link>
           </p>
         </div>
 
-        <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
-            {/* Full Name */}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5 ml-1">
-                Full Name
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <User className="w-5 h-5" />
-                </span>
-                <input
-                  type="text"
-                  {...register("name")}
-                  className={`block w-full pl-11 pr-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 border ${
-                    errors.name ? "border-red-500 focus:ring-red-400" : "border-slate-200 focus:ring-primary/40"
-                  } rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:bg-white transition-all text-sm`}
-                  placeholder="John Doe"
-                />
-              </div>
-              {errors.name && (
-                <p className="mt-1.5 text-xs text-red-500 ml-1">
-                  {errors.name.message}
-                </p>
-              )}
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <div>
+            <label className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">
+              Full Name
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <User className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                {...register("name")}
+                className={`block w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border ${
+                  errors.name ? "border-red-500" : "border-slate-200 dark:border-slate-700"
+                } rounded-2xl text-slate-900 dark:text-slate-100 text-xs font-bold`}
+                placeholder="John Doe"
+              />
             </div>
+            {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
+          </div>
 
-            {/* Email Address */}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5 ml-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Mail className="w-5 h-5" />
-                </span>
-                <input
-                  type="email"
-                  {...register("email")}
-                  className={`block w-full pl-11 pr-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 border ${
-                    errors.email ? "border-red-500 focus:ring-red-400" : "border-slate-200 focus:ring-primary/40"
-                  } rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:bg-white transition-all text-sm`}
-                  placeholder="john@example.com"
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1.5 text-xs text-red-500 ml-1">
-                  {errors.email.message}
-                </p>
-              )}
+          <div>
+            <label className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">
+              Email Address
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <Mail className="w-4 h-4" />
+              </span>
+              <input
+                type="email"
+                {...register("email")}
+                className={`block w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border ${
+                  errors.email ? "border-red-500" : "border-slate-200 dark:border-slate-700"
+                } rounded-2xl text-slate-900 dark:text-slate-100 text-xs font-bold`}
+                placeholder="john@example.com"
+              />
             </div>
+            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+          </div>
 
-            {/* Password */}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5 ml-1">
-                Password
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Lock className="w-5 h-5" />
-                </span>
-                <input
-                  type="password"
-                  {...register("password")}
-                  className={`block w-full pl-11 pr-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 border ${
-                    errors.password ? "border-red-500 focus:ring-red-400" : "border-slate-200 focus:ring-primary/40"
-                  } rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:bg-white transition-all text-sm`}
-                  placeholder="••••••••"
-                />
-              </div>
-              {errors.password && (
-                <p className="mt-1.5 text-xs text-red-500 ml-1">
-                  {errors.password.message}
-                </p>
-              )}
+          <div>
+            <label className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <Lock className="w-4 h-4" />
+              </span>
+              <input
+                type="password"
+                {...register("password")}
+                className={`block w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border ${
+                  errors.password ? "border-red-500" : "border-slate-200 dark:border-slate-700"
+                } rounded-2xl text-slate-900 dark:text-slate-100 text-xs font-bold`}
+                placeholder="••••••••"
+              />
             </div>
+            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+          </div>
 
-            {/* Profile Image Tab System */}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5 ml-1">
-                Profile Image URL
-              </label>
-              
-              <div className="relative flex items-center gap-4">
-                <div className="relative flex-1">
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <ImageIcon className="w-4 h-4" />
-                    </span>
-                    <input
-                      type="url"
-                      placeholder="https://images.unsplash.com/photo-1534528741775-53994a69daeb"
-                      {...register("image", {
-                        onChange: (e) => {
-                          const url = e.target.value;
-                          setImagePreview(url || null);
-                        }
-                      })}
-                      className="block w-full pl-10 pr-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 focus:ring-primary/40 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:bg-white transition-all text-sm font-medium"
-                    />
-                  </div>
-                </div>
-                {imagePreview && (
-                  <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="shrink-0"
-                  >
-                    <img
-                      src={imagePreview}
-                      alt="Avatar Preview"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = "none";
-                      }}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-primary shadow-md hover:scale-110 transition-transform duration-300"
-                    />
-                  </motion.div>
-                )}
+          <div>
+            <label className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">
+              Select Account Role
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <div
+                onClick={() => setValue("role", "TENANT")}
+                className={`cursor-pointer p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center ${
+                  selectedRole === "TENANT"
+                    ? "border-orange-500 bg-orange-500/10 text-orange-500"
+                    : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-500"
+                }`}
+              >
+                <User className="w-5 h-5 mb-1" />
+                <span className="font-extrabold text-xs">Tenant</span>
               </div>
-            </div>
 
-            {/* Role selection Cards */}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2.5 ml-1">
-                Register As
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setValue("role", "TENANT")}
-                  className={`cursor-pointer p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center ${
-                    selectedRole === "TENANT"
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-slate-100 hover:border-slate-200 bg-slate-50/50 text-slate-500"
-                  }`}
-                >
-                  <User className="w-6 h-6 mb-2" />
-                  <span className="font-bold text-sm">Tenant</span>
-                  <span className="text-[10px] mt-1 opacity-80">Looking for a home</span>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setValue("role", "LANDLORD")}
-                  className={`cursor-pointer p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center ${
-                    selectedRole === "LANDLORD"
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-slate-100 hover:border-slate-200 bg-slate-50/50 text-slate-500"
-                  }`}
-                >
-                  <Shield className="w-6 h-6 mb-2" />
-                  <span className="font-bold text-sm">Landlord</span>
-                  <span className="text-[10px] mt-1 opacity-80">Own properties to list</span>
-                </motion.div>
+              <div
+                onClick={() => setValue("role", "LANDLORD")}
+                className={`cursor-pointer p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center ${
+                  selectedRole === "LANDLORD"
+                    ? "border-orange-500 bg-orange-500/10 text-orange-500"
+                    : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-500"
+                }`}
+              >
+                <Shield className="w-5 h-5 mb-1" />
+                <span className="font-extrabold text-xs">Landlord</span>
               </div>
-              {errors.role && (
-                <p className="mt-1.5 text-xs text-red-500 ml-1">
-                  {errors.role.message}
-                </p>
-              )}
             </div>
           </div>
 
-          <div className="pt-2">
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-6 text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-md hover:shadow-lg transition-all"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Registering...
-                </>
-              ) : (
-                "Create Account"
-              )}
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-6 text-xs font-black bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 text-white dark:text-slate-900 rounded-2xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Account"}
+          </Button>
         </form>
       </motion.div>
     </div>
