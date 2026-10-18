@@ -1,15 +1,29 @@
-"use server"
+"use server";
 
 import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
-// import { redirect } from "next/navigation";
 
 export const logout = async () => {
-    const cookieStore = await cookies();
-    
-    cookieStore.delete("accessToken");
-    cookieStore.delete("refreshToken");
+  const cookieStore = await cookies();
 
-    revalidateTag("my-profile", "max");
-    // redirect("/login");
-}
+  cookieStore.set("accessToken", "", {
+    httpOnly: true,
+    maxAge: 0,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+
+  cookieStore.set("refreshToken", "", {
+    httpOnly: true,
+    maxAge: 0,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+
+  cookieStore.delete("accessToken");
+  cookieStore.delete("refreshToken");
+
+  revalidateTag("my-profile", "max");
+};

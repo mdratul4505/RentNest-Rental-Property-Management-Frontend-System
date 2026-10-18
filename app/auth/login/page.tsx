@@ -45,18 +45,23 @@ export default function LoginPage() {
         toast.success("Successfully logged in!");
         router.refresh();
 
-        const token = response.data.accessToken;
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        const role = payload.role?.toUpperCase();
+        const token = response.data?.accessToken;
+        let role = "TENANT";
+        try {
+          if (token) {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            role = (payload.role || "TENANT").toUpperCase();
+          }
+        } catch (e) {
+          console.error("JWT decode error:", e);
+        }
 
-        if (role === "TENANT") {
-          router.push("/dashboard/tenant");
-        } else if (role === "LANDLORD") {
-          router.push("/dashboard/landlord");
+        if (role === "LANDLORD") {
+          window.location.href = "/dashboard/landlord";
         } else if (role === "ADMIN") {
-          router.push("/dashboard/admin");
+          window.location.href = "/dashboard/admin";
         } else {
-          router.push("/");
+          window.location.href = "/dashboard/tenant";
         }
       } else {
         toast.error(response.message || "Invalid credentials. Please try again.");

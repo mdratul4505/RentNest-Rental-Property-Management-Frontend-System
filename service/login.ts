@@ -24,6 +24,7 @@ export const login = async (payload: any) => {
                 maxAge: 60 * 60 * 24, // 1 day
                 sameSite: "lax",
                 secure: process.env.NODE_ENV === "production",
+                path: "/",
             });
 
             cookieStore.set("refreshToken", result.data.refreshToken, {
@@ -31,6 +32,7 @@ export const login = async (payload: any) => {
                 maxAge: 60 * 60 * 24 * 7, // 7 days
                 sameSite: "lax",
                 secure: process.env.NODE_ENV === "production",
+                path: "/",
             });
         }
 
@@ -78,12 +80,14 @@ export const socialLoginApi = async (payload: {
                 maxAge: 60 * 60 * 24,
                 sameSite: "lax",
                 secure: process.env.NODE_ENV === "production",
+                path: "/",
             });
             cookieStore.set("refreshToken", result.data.refreshToken, {
                 httpOnly: true,
                 maxAge: 60 * 60 * 24 * 7,
                 sameSite: "lax",
                 secure: process.env.NODE_ENV === "production",
+                path: "/",
             });
             return result;
         }
@@ -122,12 +126,14 @@ export const socialLoginApi = async (payload: {
                             maxAge: 60 * 60 * 24,
                             sameSite: "lax",
                             secure: process.env.NODE_ENV === "production",
+                            path: "/",
                         });
                         cookieStore.set("refreshToken", loginData.data.refreshToken, {
                             httpOnly: true,
                             maxAge: 60 * 60 * 24 * 7,
                             sameSite: "lax",
                             secure: process.env.NODE_ENV === "production",
+                            path: "/",
                         });
                         return loginData;
                     }
@@ -157,6 +163,7 @@ export const socialLoginApi = async (payload: {
             maxAge: 60 * 60 * 24,
             sameSite: "lax",
             secure: process.env.NODE_ENV === "production",
+            path: "/",
         });
 
         cookieStore.set("refreshToken", refreshToken, {
@@ -164,6 +171,7 @@ export const socialLoginApi = async (payload: {
             maxAge: 60 * 60 * 24 * 7,
             sameSite: "lax",
             secure: process.env.NODE_ENV === "production",
+            path: "/",
         });
 
         return {

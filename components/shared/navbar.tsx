@@ -85,8 +85,7 @@ export function Navbar({ user }: { user: any }) {
   const handleLogout = async () => {
     await logout();
     toast.success("Logged out successfully!");
-    router.push("/auth/login");
-    router.refresh();
+    window.location.href = "/auth/login";
   };
 
   const navLinks = [

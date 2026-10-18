@@ -53,8 +53,16 @@ export default function RegisterPage() {
     try {
       const response = await registerUser(data);
       if (response.success) {
-        toast.success("Account created successfully! Please login.");
-        router.push("/auth/login");
+        toast.success("Account created successfully! Welcome to RentNest.");
+        const userRole = (response.data?.user?.role || data.role || "TENANT").toUpperCase();
+        
+        if (userRole === "LANDLORD") {
+          window.location.href = "/dashboard/landlord";
+        } else if (userRole === "ADMIN") {
+          window.location.href = "/dashboard/admin";
+        } else {
+          window.location.href = "/dashboard/tenant";
+        }
       } else {
         toast.error(response.message || "Registration failed. Try again.");
       }
