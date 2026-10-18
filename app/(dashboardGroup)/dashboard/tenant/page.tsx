@@ -18,11 +18,14 @@ import {
   Heart,
   CreditCard,
   LogOut,
-  Moon,
-  Sun,
   Search,
   ArrowRight,
   ShieldAlert,
+  Bell,
+  Lock,
+  Shield,
+  Save,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,6 +34,7 @@ import { getTenantRentals } from "@/service/tenant";
 import { logout } from "@/service/logout";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,16 +46,21 @@ import {
 
 export default function TenantDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"overview" | "requests" | "saved" | "profile" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "requests" | "saved" | "settings">("overview");
   const [userData, setUserData] = useState<any>(null);
   const [requests, setRequests] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Search & Filter state for requests table
+  // Search & Filter state for requests
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Settings State
+  const [emailAlerts, setEmailAlerts] = useState(true);
+  const [smsAlerts, setSmsAlerts] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     async function loadTenantData() {
@@ -96,6 +105,14 @@ export default function TenantDashboard() {
     await logout();
     toast.success("Logged out successfully!");
     window.location.href = "/auth/login";
+  };
+
+  const handleSaveSettings = () => {
+    setSavingSettings(true);
+    setTimeout(() => {
+      setSavingSettings(false);
+      toast.success("Preferences saved successfully!");
+    }, 600);
   };
 
   // Filter requests
@@ -147,7 +164,7 @@ export default function TenantDashboard() {
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "requests", label: "My Rental Requests", icon: Clock },
     { id: "saved", label: "Saved Wishlist", icon: Heart },
-    { id: "profile", label: "My Profile", icon: User },
+    { id: "profile", label: "My Profile", icon: User, isRoute: true },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -194,8 +211,11 @@ export default function TenantDashboard() {
                 <button
                   key={link.id}
                   onClick={() => {
-                    setActiveTab(link.id as any);
-                    if (link.id === "profile") router.push("/dashboard/profile");
+                    if (link.isRoute) {
+                      router.push("/dashboard/profile");
+                    } else {
+                      setActiveTab(link.id as any);
+                    }
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer ${
                     isActive
@@ -203,7 +223,7 @@ export default function TenantDashboard() {
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
-                  <Icon className="w-4 h-4 text-orange-500" />
+                  <Icon className={`w-4 h-4 ${isActive ? "text-orange-500" : "text-slate-400"}`} />
                   {link.label}
                 </button>
               );
@@ -223,18 +243,26 @@ export default function TenantDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 p-6 sm:p-8 space-y-8 overflow-x-hidden">
-        {/* Navbar with Profile Icon & Dropdown */}
+        {/* Navbar with Profile Icon & Theme Toggle */}
         <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-black text-slate-900 dark:text-white">Tenant Dashboard</h2>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white capitalize">
+              {activeTab === "overview" && "Tenant Dashboard"}
+              {activeTab === "requests" && "My Rental Requests"}
+              {activeTab === "saved" && "Saved Wishlist"}
+              {activeTab === "settings" && "Account & App Settings"}
+            </h2>
             <p className="text-xs text-slate-500 font-medium">
               Welcome back, <span className="font-bold text-slate-800 dark:text-slate-200">{userData?.name || "Tenant"}</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline-flex text-[10px] font-black uppercase tracking-wider text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
-              Tenant Account
+          <div className="flex items-center gap-2.5">
+            {/* Theme Toggle Button */}
+            <ThemeToggle />
+
+            <span className="hidden sm:inline-flex text-[10px] font-black uppercase tracking-wider text-orange-500 bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-500/20">
+              Tenant
             </span>
 
             <DropdownMenu>
@@ -257,6 +285,9 @@ export default function TenantDashboard() {
                 <DropdownMenuItem onClick={() => router.push("/dashboard/profile")} className="cursor-pointer text-xs font-bold">
                   <User className="w-4 h-4 mr-2 text-orange-500" /> View Profile
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("settings")} className="cursor-pointer text-xs font-bold">
+                  <Settings className="w-4 h-4 mr-2 text-slate-500" /> Settings
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/properties")} className="cursor-pointer text-xs font-bold">
                   <Building2 className="w-4 h-4 mr-2 text-emerald-500" /> Browse Properties
                 </DropdownMenuItem>
@@ -269,221 +300,403 @@ export default function TenantDashboard() {
           </div>
         </div>
 
-        {/* Overview Cards (Real Dynamic Counts) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Requests</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{requests.length}</p>
-            <p className="text-[11px] text-slate-400">Applications submitted by you</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
-            <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider">Approved Requests</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">
-              {requests.filter((r) => r.status === "APPROVED").length}
-            </p>
-            <p className="text-[11px] text-slate-400">Ready for payment / lease</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
-            <p className="text-xs font-bold text-amber-500 uppercase tracking-wider">Pending Requests</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">
-              {requests.filter((r) => r.status === "PENDING").length}
-            </p>
-            <p className="text-[11px] text-slate-400">Awaiting landlord response</p>
-          </div>
-        </div>
-
-        {/* Dynamic Analytics Chart */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">Monthly Rental Activity & Spending</h3>
-              <p className="text-xs text-slate-500 font-medium">Calculated directly from your personal application history</p>
+        {/* TAB 1: OVERVIEW */}
+        {activeTab === "overview" && (
+          <div className="space-y-8 animate-fade-in">
+            {/* Overview Cards (Real Dynamic Counts) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Requests</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">{requests.length}</p>
+                <p className="text-[11px] text-slate-400">Applications submitted by you</p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+                <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider">Approved Requests</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">
+                  {requests.filter((r) => r.status === "APPROVED").length}
+                </p>
+                <p className="text-[11px] text-slate-400">Ready for payment / lease</p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+                <p className="text-xs font-bold text-amber-500 uppercase tracking-wider">Pending Requests</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">
+                  {requests.filter((r) => r.status === "PENDING").length}
+                </p>
+                <p className="text-[11px] text-slate-400">Awaiting landlord response</p>
+              </div>
             </div>
-            <span className="text-xs font-bold text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full">
-              {requests.length > 0 ? "Active User Data" : "New Account"}
-            </span>
-          </div>
 
-          {/* SVG Bar Chart */}
-          <div className="h-44 w-full flex items-end justify-between gap-3 pt-6 px-4 border-b border-slate-100 dark:border-slate-800">
-            {chartData.map((bar, i) => {
-              const heightPercent = bar.amount > 0 ? Math.max(Math.round((bar.amount / maxAmount) * 100), 15) : 8;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <span className="text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {bar.label} ({bar.count} req)
-                  </span>
-                  <div
-                    style={{ height: `${heightPercent}%` }}
-                    className={`w-full max-w-[48px] rounded-t-xl transition-all ${
-                      bar.amount > 0
-                        ? "bg-gradient-to-t from-orange-500 to-amber-400 group-hover:brightness-110"
-                        : "bg-slate-100 dark:bg-slate-800"
-                    }`}
-                  />
-                  <span className="text-xs font-bold text-slate-500">{bar.month}</span>
+            {/* Dynamic Analytics Chart */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">Monthly Rental Activity & Spending</h3>
+                  <p className="text-xs text-slate-500 font-medium">Calculated directly from your personal application history</p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+                <span className="text-xs font-bold text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full">
+                  {requests.length > 0 ? "Active User Data" : "New Account"}
+                </span>
+              </div>
 
-        {/* Filtered & Paginated Table */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">Rental Application History</h3>
-              <p className="text-xs text-slate-500 font-medium">Track your submitted rental requests and approval statuses</p>
+              {/* SVG Bar Chart */}
+              <div className="h-44 w-full flex items-end justify-between gap-3 pt-6 px-4 border-b border-slate-100 dark:border-slate-800">
+                {chartData.map((bar, i) => {
+                  const heightPercent = bar.amount > 0 ? Math.max(Math.round((bar.amount / maxAmount) * 100), 15) : 8;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                      <span className="text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {bar.label} ({bar.count} req)
+                      </span>
+                      <div
+                        style={{ height: `${heightPercent}%` }}
+                        className={`w-full max-w-[48px] rounded-t-xl transition-all ${
+                          bar.amount > 0
+                            ? "bg-gradient-to-t from-orange-500 to-amber-400 group-hover:brightness-110"
+                            : "bg-slate-100 dark:bg-slate-800"
+                        }`}
+                      />
+                      <span className="text-xs font-bold text-slate-500">{bar.month}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Filter by property..."
-                  value={searchQuery}
+            {/* Recent Requests Section */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">Recent Applications</h3>
+                  <p className="text-xs text-slate-500">Your latest rental requests</p>
+                </div>
+                <button
+                  onClick={() => setActiveTab("requests")}
+                  className="text-xs font-bold text-orange-500 hover:text-orange-600 cursor-pointer flex items-center gap-1"
+                >
+                  View All ({requests.length}) <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {requests.length === 0 ? (
+                <div className="text-center py-10 px-4 space-y-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                  <Building2 className="w-8 h-8 text-orange-500 mx-auto" />
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No rental applications yet</p>
+                  <Link
+                    href="/properties"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-extrabold shadow-sm transition-colors"
+                  >
+                    Browse Available Properties
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {requests.slice(0, 3).map((req) => (
+                    <div
+                      key={req.id}
+                      className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between"
+                    >
+                      <div>
+                        <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
+                          {req.property?.title || "Property Rental"}
+                        </h4>
+                        <p className="text-[11px] text-slate-400">{req.property?.location || "Dhaka"}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-extrabold text-orange-500">
+                          ৳{Number(req.rentAmount || req.property?.price || 0).toLocaleString()}
+                        </span>
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+                            req.status === "APPROVED"
+                              ? "bg-emerald-500/10 text-emerald-500"
+                              : req.status === "PENDING"
+                              ? "bg-amber-500/10 text-amber-500"
+                              : "bg-red-500/10 text-red-500"
+                          }`}
+                        >
+                          {req.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: MY RENTAL REQUESTS */}
+        {activeTab === "requests" && (
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">Rental Application History</h3>
+                <p className="text-xs text-slate-500 font-medium">Track your submitted rental requests and approval statuses</p>
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Filter by property..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-8 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+                </div>
+
+                <select
+                  value={statusFilter}
                   onChange={(e) => {
-                    setSearchQuery(e.target.value);
+                    setStatusFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="pl-8 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none"
-                />
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+                  className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
+                >
+                  <option value="all">All Status</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
               </div>
-
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
-              >
-                <option value="all">All Status</option>
-                <option value="APPROVED">Approved</option>
-                <option value="PENDING">Pending</option>
-                <option value="REJECTED">Rejected</option>
-              </select>
             </div>
-          </div>
 
-          {/* Table or Empty State */}
-          {filteredRequests.length === 0 ? (
-            <div className="text-center py-12 px-4 space-y-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
-                <Building2 className="w-7 h-7" />
+            {/* Table or Empty State */}
+            {filteredRequests.length === 0 ? (
+              <div className="text-center py-14 px-4 space-y-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
+                  <Building2 className="w-7 h-7" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                    {searchQuery || statusFilter !== "all" ? "No matching requests found" : "No rental requests yet"}
+                  </h4>
+                  <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
+                    {searchQuery || statusFilter !== "all"
+                      ? "Try adjusting your search terms or status filters."
+                      : "You haven't submitted any rental requests yet. Explore available properties to find your dream apartment!"}
+                  </p>
+                </div>
+                <Link
+                  href="/properties"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs rounded-xl transition-all shadow-md cursor-pointer"
+                >
+                  <Building2 className="w-4 h-4" /> Browse Available Properties
+                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px]">
+                      <th className="py-3 px-4">Property</th>
+                      <th className="py-3 px-4">Move-In Date</th>
+                      <th className="py-3 px-4">Rent</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedRequests.map((req) => {
+                      const price = req.rentAmount || req.property?.price || 0;
+                      const dateStr = req.moveInDate
+                        ? new Date(req.moveInDate).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Flexible";
+                      return (
+                        <tr
+                          key={req.id}
+                          className="border-b border-slate-100/60 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
+                        >
+                          <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                            <div>
+                              <p>{req.property?.title || "Property Rental"}</p>
+                              <p className="text-[10px] font-normal text-slate-400">{req.property?.location || "Dhaka"}</p>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4">{dateStr}</td>
+                          <td className="py-3.5 px-4 font-extrabold text-orange-500">৳{Number(price).toLocaleString()}</td>
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+                                req.status === "APPROVED"
+                                  ? "bg-emerald-500/10 text-emerald-500"
+                                  : req.status === "PENDING"
+                                  ? "bg-amber-500/10 text-amber-500"
+                                  : "bg-red-500/10 text-red-500"
+                              }`}
+                            >
+                              {req.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            {req.status === "APPROVED" ? (
+                              <Link
+                                href={`/dashboard/tenant/requests/${req.id}/pay`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-extrabold shadow-sm transition-colors"
+                              >
+                                <CreditCard className="w-3 h-3" /> Pay Now
+                              </Link>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-bold">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: SAVED WISHLIST */}
+        {activeTab === "saved" && (
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">Saved Properties Wishlist</h3>
+                <p className="text-xs text-slate-500">Properties you bookmarked for later consideration</p>
+              </div>
+              <Link
+                href="/properties"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all"
+              >
+                <Search className="w-3.5 h-3.5" /> Explore More Homes
+              </Link>
+            </div>
+
+            <div className="text-center py-14 px-4 space-y-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                <Heart className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-sm font-black text-slate-900 dark:text-white">
-                  {searchQuery || statusFilter !== "all" ? "No matching requests found" : "No rental requests yet"}
-                </h4>
+                <h4 className="text-sm font-black text-slate-900 dark:text-white">Your wishlist is currently empty</h4>
                 <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-                  {searchQuery || statusFilter !== "all"
-                    ? "Try adjusting your search terms or status filters."
-                    : "You haven't submitted any rental requests yet. Explore available properties to find your dream apartment!"}
+                  While browsing apartments, villas, and houses, click the heart icon on any property to save it here for quick access!
                 </p>
               </div>
               <Link
                 href="/properties"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs rounded-xl transition-all shadow-md cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-extrabold text-xs rounded-xl transition-all shadow-md cursor-pointer"
               >
-                <Building2 className="w-4 h-4" /> Browse Available Properties
+                <Building2 className="w-4 h-4" /> Browse Properties
               </Link>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs font-semibold text-slate-600 dark:text-slate-300">
-                <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px]">
-                    <th className="py-3 px-4">Property</th>
-                    <th className="py-3 px-4">Move-In Date</th>
-                    <th className="py-3 px-4">Rent</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedRequests.map((req) => {
-                    const price = req.rentAmount || req.property?.price || 0;
-                    const dateStr = req.moveInDate
-                      ? new Date(req.moveInDate).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "Flexible";
-                    return (
-                      <tr
-                        key={req.id}
-                        className="border-b border-slate-100/60 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
-                      >
-                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                          <div>
-                            <p>{req.property?.title || "Property Rental"}</p>
-                            <p className="text-[10px] font-normal text-slate-400">{req.property?.location || "Dhaka"}</p>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4">{dateStr}</td>
-                        <td className="py-3.5 px-4 font-extrabold text-orange-500">৳{Number(price).toLocaleString()}</td>
-                        <td className="py-3.5 px-4">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
-                              req.status === "APPROVED"
-                                ? "bg-emerald-500/10 text-emerald-500"
-                                : req.status === "PENDING"
-                                ? "bg-amber-500/10 text-amber-500"
-                                : "bg-red-500/10 text-red-500"
-                            }`}
-                          >
-                            {req.status}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          {req.status === "APPROVED" ? (
-                            <Link
-                              href={`/dashboard/tenant/requests/${req.id}/pay`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-extrabold shadow-sm transition-colors"
-                            >
-                              <CreditCard className="w-3 h-3" /> Pay Now
-                            </Link>
-                          ) : (
-                            <span className="text-[10px] text-slate-400 font-bold">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          </div>
+        )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between text-xs font-bold text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <div className="flex items-center gap-2">
+        {/* TAB 4: SETTINGS */}
+        {activeTab === "settings" && (
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-8 animate-fade-in">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Account & Notification Settings</h3>
+              <p className="text-xs text-slate-500">Manage communication alerts, session security, and theme preferences</p>
+            </div>
+
+            {/* Notification Preferences */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Bell className="w-4 h-4 text-orange-500" /> Notifications & Alerts
+              </h4>
+
+              <div className="space-y-3">
+                <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer">
+                  <div>
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">Email Notifications for Application Updates</p>
+                    <p className="text-[11px] text-slate-400">Receive instant email when a landlord approves or responds to your rental request.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={emailAlerts}
+                    onChange={(e) => setEmailAlerts(e.target.checked)}
+                    className="w-4 h-4 accent-orange-500 cursor-pointer"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer">
+                  <div>
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">Payment Due Reminders</p>
+                    <p className="text-[11px] text-slate-400">Receive reminders 3 days before monthly rental lease payment deadline.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={smsAlerts}
+                    onChange={(e) => setSmsAlerts(e.target.checked)}
+                    className="w-4 h-4 accent-orange-500 cursor-pointer"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Security */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-emerald-500" /> Security & Session
+              </h4>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-extrabold text-slate-900 dark:text-white">Current Active Session</p>
+                  <p className="text-[11px] text-slate-400">Signed in as {userData?.email} (User ID: {userData?.id})</p>
+                </div>
                 <button
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-3.5 py-1.5 bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl text-xs font-bold hover:bg-red-100 cursor-pointer transition-colors"
                 >
-                  Prev
-                </button>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
-                >
-                  Next
+                  Log Out
                 </button>
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                type="button"
+                onClick={handleSaveSettings}
+                disabled={savingSettings}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 text-white dark:text-slate-900 font-extrabold text-xs rounded-2xl shadow-md transition-all cursor-pointer"
+              >
+                {savingSettings ? <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Preferences
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
