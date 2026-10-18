@@ -21,10 +21,13 @@ import {
   Moon,
   Sun,
   Search,
+  ArrowRight,
+  ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getMe } from "@/service/getMe";
+import { getTenantRentals } from "@/service/tenant";
 import { logout } from "@/service/logout";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,32 +46,45 @@ export default function TenantDashboard() {
   const [userData, setUserData] = useState<any>(null);
   const [requests, setRequests] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Search & Filter state for requests table
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const itemsPerPage = 5;
 
   useEffect(() => {
     async function loadTenantData() {
       try {
         const userRes = await getMe();
-        if (userRes.success && userRes.data?.user) {
-          setUserData(userRes.data.user);
+        if (!userRes.success || !userRes.data?.user) {
+          window.location.href = "/auth/login";
+          return;
         }
 
-        // Mock/Fetch Tenant Requests
-        const mockRequests = [
-          { id: "req-101", property: { title: "Luxury Penthouse in Gulshan 2", location: "Gulshan, Dhaka", price: 45000 }, moveInDate: "2026-09-15", status: "APPROVED", rentAmount: 45000 },
-          { id: "req-102", property: { title: "Modern 3BR Flat in Banani", location: "Banani, Dhaka", price: 28000 }, moveInDate: "2026-09-20", status: "PENDING", rentAmount: 28000 },
-          { id: "req-103", property: { title: "Cozy Studio Apartment in Uttara", location: "Uttara, Dhaka", price: 14000 }, moveInDate: "2026-08-01", status: "REJECTED", rentAmount: 14000 },
-          { id: "req-104", property: { title: "Family Residence in Dhanmondi", location: "Dhanmondi, Dhaka", price: 22000 }, moveInDate: "2026-10-01", status: "APPROVED", rentAmount: 22000 },
-          { id: "req-105", property: { title: "Executive Duplex Villa", location: "Baridhara, Dhaka", price: 65000 }, moveInDate: "2026-10-10", status: "PENDING", rentAmount: 65000 },
-        ];
-        setRequests(mockRequests);
+        const user = userRes.data.user;
+        const role = user.role?.toUpperCase();
+
+        if (role === "LANDLORD") {
+          window.location.href = "/dashboard/landlord";
+          return;
+        } else if (role === "ADMIN") {
+          window.location.href = "/dashboard/admin";
+          return;
+        }
+
+        setUserData(user);
+
+        // Fetch real rental requests for this specific logged-in tenant
+        const rentalsRes = await getTenantRentals();
+        if (rentalsRes.success && Array.isArray(rentalsRes.data)) {
+          setRequests(rentalsRes.data);
+        } else {
+          setRequests([]);
+        }
       } catch (err) {
         console.error("Failed loading tenant dashboard data", err);
+        setRequests([]);
       } finally {
         setIsLoading(false);
       }
@@ -79,20 +95,53 @@ export default function TenantDashboard() {
   const handleLogout = async () => {
     await logout();
     toast.success("Logged out successfully!");
-    router.push("/auth/login");
+    window.location.href = "/auth/login";
   };
 
   // Filter requests
   const filteredRequests = requests.filter((req) => {
+    const propTitle = req.property?.title || "";
+    const propLoc = req.property?.location || "";
     const matchesSearch =
-      req.property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.property.location.toLowerCase().includes(searchQuery.toLowerCase());
+      propTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      propLoc.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || req.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredRequests.length / itemsPerPage) || 1;
   const paginatedRequests = filteredRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Dynamically calculate monthly rental activity from user's requests
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const currentMonthIdx = new Date().getMonth();
+  const last5Months = Array.from({ length: 5 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(currentMonthIdx - (4 - i));
+    return {
+      month: monthNames[d.getMonth()],
+      monthIdx: d.getMonth(),
+    };
+  });
+
+  const chartData = last5Months.map((m) => {
+    const monthlyRequests = requests.filter((r) => {
+      const rDate = new Date(r.createdAt || r.moveInDate || Date.now());
+      return rDate.getMonth() === m.monthIdx;
+    });
+    const monthlyTotal = monthlyRequests.reduce(
+      (sum, r) => sum + Number(r.rentAmount || r.property?.price || 0),
+      0
+    );
+    return {
+      month: m.month,
+      count: monthlyRequests.length,
+      amount: monthlyTotal,
+      label: monthlyTotal >= 1000 ? `৳${Math.round(monthlyTotal / 1000)}k` : `৳${monthlyTotal}`,
+    };
+  });
+
+  const maxAmount = Math.max(...chartData.map((c) => c.amount), 1);
 
   const sidebarLinks = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -102,10 +151,20 @@ export default function TenantDashboard() {
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-slate-500">Loading your personalized dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors flex flex-col md:flex-row">
-      
-      {/* Sidebar Navigation (Minimum 4 Menu Items) */}
+      {/* Sidebar Navigation */}
       <aside className="w-full md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between shrink-0">
         <div className="space-y-6">
           <Link href="/" className="flex items-center gap-2.5">
@@ -117,7 +176,17 @@ export default function TenantDashboard() {
             </span>
           </Link>
 
-          <nav className="space-y-1.5 pt-4">
+          {/* User Identity Chip */}
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/60 dark:border-slate-700 space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Signed In As</p>
+            <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{userData?.name}</p>
+            <p className="text-[11px] text-slate-500 truncate">{userData?.email}</p>
+            {userData?.id && (
+              <p className="text-[9px] font-mono text-slate-400 truncate pt-0.5">ID: {userData.id}</p>
+            )}
+          </div>
+
+          <nav className="space-y-1.5 pt-2">
             {sidebarLinks.map((link) => {
               const Icon = link.icon;
               const isActive = activeTab === link.id;
@@ -154,15 +223,20 @@ export default function TenantDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 p-6 sm:p-8 space-y-8 overflow-x-hidden">
-        
         {/* Navbar with Profile Icon & Dropdown */}
         <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
             <h2 className="text-lg font-black text-slate-900 dark:text-white">Tenant Dashboard</h2>
-            <p className="text-xs text-slate-500 font-medium">Welcome back, {userData?.name || "Tenant"}</p>
+            <p className="text-xs text-slate-500 font-medium">
+              Welcome back, <span className="font-bold text-slate-800 dark:text-slate-200">{userData?.name || "Tenant"}</span>
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
+            <span className="hidden sm:inline-flex text-[10px] font-black uppercase tracking-wider text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
+              Tenant Account
+            </span>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 p-1.5 pr-3 bg-slate-100 dark:bg-slate-800 rounded-full cursor-pointer hover:bg-slate-200 border border-slate-200/60 dark:border-slate-700">
@@ -177,6 +251,7 @@ export default function TenantDashboard() {
               <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
                 <DropdownMenuLabel className="px-3 py-2 text-xs font-black text-slate-900 dark:text-white">
                   {userData?.name}
+                  <p className="text-[10px] font-normal text-slate-400">{userData?.email}</p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push("/dashboard/profile")} className="cursor-pointer text-xs font-bold">
@@ -194,60 +269,73 @@ export default function TenantDashboard() {
           </div>
         </div>
 
-        {/* Overview Cards */}
+        {/* Overview Cards (Real Dynamic Counts) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Requests</p>
             <p className="text-3xl font-black text-slate-900 dark:text-white">{requests.length}</p>
+            <p className="text-[11px] text-slate-400">Applications submitted by you</p>
           </div>
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
             <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider">Approved Requests</p>
             <p className="text-3xl font-black text-slate-900 dark:text-white">
               {requests.filter((r) => r.status === "APPROVED").length}
             </p>
+            <p className="text-[11px] text-slate-400">Ready for payment / lease</p>
           </div>
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
             <p className="text-xs font-bold text-amber-500 uppercase tracking-wider">Pending Requests</p>
             <p className="text-3xl font-black text-slate-900 dark:text-white">
               {requests.filter((r) => r.status === "PENDING").length}
             </p>
+            <p className="text-[11px] text-slate-400">Awaiting landlord response</p>
           </div>
         </div>
 
-        {/* Dynamic Analytics Chart (Monthly Rental Spending SVG Bar Chart) */}
+        {/* Dynamic Analytics Chart */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-black text-slate-900 dark:text-white">Monthly Rental Activity & Spending</h3>
-            <span className="text-xs font-bold text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full">Dynamic Data</span>
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Monthly Rental Activity & Spending</h3>
+              <p className="text-xs text-slate-500 font-medium">Calculated directly from your personal application history</p>
+            </div>
+            <span className="text-xs font-bold text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full">
+              {requests.length > 0 ? "Active User Data" : "New Account"}
+            </span>
           </div>
 
           {/* SVG Bar Chart */}
           <div className="h-44 w-full flex items-end justify-between gap-3 pt-6 px-4 border-b border-slate-100 dark:border-slate-800">
-            {[
-              { month: "May", height: "40%", amount: "৳14k" },
-              { month: "Jun", height: "65%", amount: "৳22k" },
-              { month: "Jul", height: "80%", amount: "৳28k" },
-              { month: "Aug", height: "55%", amount: "৳18k" },
-              { month: "Sep", height: "95%", amount: "৳45k" },
-            ].map((bar, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                <span className="text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">{bar.amount}</span>
-                <div
-                  style={{ height: bar.height }}
-                  className="w-full max-w-[48px] bg-gradient-to-t from-orange-500 to-amber-400 rounded-t-xl group-hover:brightness-110 transition-all"
-                />
-                <span className="text-xs font-bold text-slate-500">{bar.month}</span>
-              </div>
-            ))}
+            {chartData.map((bar, i) => {
+              const heightPercent = bar.amount > 0 ? Math.max(Math.round((bar.amount / maxAmount) * 100), 15) : 8;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                  <span className="text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {bar.label} ({bar.count} req)
+                  </span>
+                  <div
+                    style={{ height: `${heightPercent}%` }}
+                    className={`w-full max-w-[48px] rounded-t-xl transition-all ${
+                      bar.amount > 0
+                        ? "bg-gradient-to-t from-orange-500 to-amber-400 group-hover:brightness-110"
+                        : "bg-slate-100 dark:bg-slate-800"
+                    }`}
+                  />
+                  <span className="text-xs font-bold text-slate-500">{bar.month}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Filtered & Paginated Table */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6">
-          
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h3 className="text-base font-black text-slate-900 dark:text-white">Rental Application History</h3>
-            
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Rental Application History</h3>
+              <p className="text-xs text-slate-500 font-medium">Track your submitted rental requests and approval statuses</p>
+            </div>
+
             {/* Controls */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -280,41 +368,103 @@ export default function TenantDashboard() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs font-semibold text-slate-600 dark:text-slate-300">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px]">
-                  <th className="py-3 px-4">Property</th>
-                  <th className="py-3 px-4">Move-In Date</th>
-                  <th className="py-3 px-4">Rent</th>
-                  <th className="py-3 px-4">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedRequests.map((req) => (
-                  <tr key={req.id} className="border-b border-slate-100/60 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{req.property.title}</td>
-                    <td className="py-3.5 px-4">{req.moveInDate}</td>
-                    <td className="py-3.5 px-4 font-extrabold text-orange-500">৳{req.rentAmount.toLocaleString()}</td>
-                    <td className="py-3.5 px-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
-                        req.status === "APPROVED" ? "bg-emerald-500/10 text-emerald-500" :
-                        req.status === "PENDING" ? "bg-amber-500/10 text-amber-500" : "bg-red-500/10 text-red-500"
-                      }`}>
-                        {req.status}
-                      </span>
-                    </td>
+          {/* Table or Empty State */}
+          {filteredRequests.length === 0 ? (
+            <div className="text-center py-12 px-4 space-y-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
+                <Building2 className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                  {searchQuery || statusFilter !== "all" ? "No matching requests found" : "No rental requests yet"}
+                </h4>
+                <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
+                  {searchQuery || statusFilter !== "all"
+                    ? "Try adjusting your search terms or status filters."
+                    : "You haven't submitted any rental requests yet. Explore available properties to find your dream apartment!"}
+                </p>
+              </div>
+              <Link
+                href="/properties"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs rounded-xl transition-all shadow-md cursor-pointer"
+              >
+                <Building2 className="w-4 h-4" /> Browse Available Properties
+              </Link>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px]">
+                    <th className="py-3 px-4">Property</th>
+                    <th className="py-3 px-4">Move-In Date</th>
+                    <th className="py-3 px-4">Rent</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {paginatedRequests.map((req) => {
+                    const price = req.rentAmount || req.property?.price || 0;
+                    const dateStr = req.moveInDate
+                      ? new Date(req.moveInDate).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "Flexible";
+                    return (
+                      <tr
+                        key={req.id}
+                        className="border-b border-slate-100/60 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
+                      >
+                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                          <div>
+                            <p>{req.property?.title || "Property Rental"}</p>
+                            <p className="text-[10px] font-normal text-slate-400">{req.property?.location || "Dhaka"}</p>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">{dateStr}</td>
+                        <td className="py-3.5 px-4 font-extrabold text-orange-500">৳{Number(price).toLocaleString()}</td>
+                        <td className="py-3.5 px-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+                              req.status === "APPROVED"
+                                ? "bg-emerald-500/10 text-emerald-500"
+                                : req.status === "PENDING"
+                                ? "bg-amber-500/10 text-amber-500"
+                                : "bg-red-500/10 text-red-500"
+                            }`}
+                          >
+                            {req.status}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          {req.status === "APPROVED" ? (
+                            <Link
+                              href={`/dashboard/tenant/requests/${req.id}/pay`}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-extrabold shadow-sm transition-colors"
+                            >
+                              <CreditCard className="w-3 h-3" /> Pay Now
+                            </Link>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-bold">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between text-xs font-bold text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>Page {currentPage} of {totalPages}</span>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
@@ -333,9 +483,7 @@ export default function TenantDashboard() {
               </div>
             </div>
           )}
-
         </div>
-
       </main>
     </div>
   );

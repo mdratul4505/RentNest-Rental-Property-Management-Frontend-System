@@ -44,6 +44,17 @@ export function proxy(request: NextRequest) {
 
     const userRole = decoded.role.toUpperCase();
 
+    // Direct /dashboard root redirect to role home
+    if (pathname === "/dashboard") {
+      if (userRole === "LANDLORD") {
+        return NextResponse.redirect(new URL("/dashboard/landlord", request.url));
+      } else if (userRole === "ADMIN") {
+        return NextResponse.redirect(new URL("/dashboard/admin", request.url));
+      } else {
+        return NextResponse.redirect(new URL("/dashboard/tenant", request.url));
+      }
+    }
+
     // Check Tenant access
     if (pathname.startsWith("/dashboard/tenant") && userRole !== "TENANT") {
       if (userRole === "LANDLORD") {
@@ -85,6 +96,8 @@ export function proxy(request: NextRequest) {
 
   return NextResponse.next();
 }
+
+export const middleware = proxy;
 
 export const config = {
   matcher: ["/dashboard/:path*", "/login", "/register"],

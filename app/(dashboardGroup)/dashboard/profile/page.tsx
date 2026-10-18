@@ -60,7 +60,7 @@ export default function ProfilePage() {
         }
       } catch (err) {
         console.error("Failed to load user profile", err);
-      } fontFinally: {
+      } finally {
         setIsLoading(false);
       }
     }
@@ -133,6 +133,9 @@ export default function ProfilePage() {
           <div className="flex-1 space-y-2 text-center sm:text-left">
             <h3 className="text-lg font-black text-slate-900 dark:text-white">{user?.name || "User"}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{user?.email}</p>
+            {user?.id && (
+              <p className="text-[10px] font-mono text-slate-400">Account ID: {user.id}</p>
+            )}
             <p className="text-[11px] text-emerald-500 font-bold flex items-center gap-1 justify-center sm:justify-start">
               <CheckCircle2 className="w-3.5 h-3.5" /> Verified RentNest Member
             </p>
