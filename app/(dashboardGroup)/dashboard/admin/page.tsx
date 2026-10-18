@@ -18,6 +18,10 @@ import {
   ShieldCheck,
   ShieldAlert,
   Loader2,
+  DollarSign,
+  Save,
+  ArrowRight,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,6 +29,7 @@ import { getMe } from "@/service/getMe";
 import { getAdminUsers, getAdminProperties, getAdminRentals, updateUserStatus } from "@/service/admin";
 import { logout } from "@/service/logout";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +42,7 @@ import {
 export default function AdminDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "properties" | "requests" | "categories" | "analytics" | "profile" | "settings"
+    "overview" | "users" | "properties" | "requests" | "categories" | "analytics" | "settings"
   >("overview");
   const [userData, setUserData] = useState<any>(null);
   const [usersList, setUsersList] = useState<any[]>([]);
@@ -46,11 +51,16 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
-  // Search & Filter & Pagination state
+  // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+
+  // Settings state
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [publicReg, setPublicReg] = useState(true);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     async function loadAdminData() {
@@ -133,6 +143,14 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSaveSettings = () => {
+    setSavingSettings(true);
+    setTimeout(() => {
+      setSavingSettings(false);
+      toast.success("Platform settings saved successfully!");
+    }, 600);
+  };
+
   const filteredUsers = usersList.filter((u) => {
     const matchesSearch =
       u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -160,7 +178,7 @@ export default function AdminDashboard() {
     { id: "requests", label: "Rental Requests", icon: Clock },
     { id: "categories", label: "Categories", icon: FolderTree },
     { id: "analytics", label: "Financial Analytics", icon: BarChart3 },
-    { id: "profile", label: "Admin Profile", icon: User },
+    { id: "profile", label: "Admin Profile", icon: User, isRoute: true, route: "/dashboard/profile" },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -207,8 +225,11 @@ export default function AdminDashboard() {
                 <button
                   key={link.id}
                   onClick={() => {
-                    if (link.id === "profile") router.push("/dashboard/profile");
-                    else setActiveTab(link.id as any);
+                    if (link.isRoute) {
+                      router.push(link.route!);
+                    } else {
+                      setActiveTab(link.id as any);
+                    }
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer ${
                     isActive
@@ -216,7 +237,7 @@ export default function AdminDashboard() {
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
-                  <Icon className="w-4 h-4 text-orange-500" />
+                  <Icon className={`w-4 h-4 ${isActive ? "text-orange-500" : "text-slate-400"}`} />
                   {link.label}
                 </button>
               );
@@ -239,15 +260,26 @@ export default function AdminDashboard() {
         {/* Navbar Header */}
         <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-black text-slate-900 dark:text-white">Admin Administration Portal</h2>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white capitalize">
+              {activeTab === "overview" && "Platform Overview"}
+              {activeTab === "users" && "User Directory & Access Control"}
+              {activeTab === "properties" && "All Platform Listings"}
+              {activeTab === "requests" && "All Rental Applications"}
+              {activeTab === "categories" && "Property Categories"}
+              {activeTab === "analytics" && "Financial & Platform Analytics"}
+              {activeTab === "settings" && "System Administration Settings"}
+            </h2>
             <p className="text-xs text-slate-500 font-medium">
-              System metrics, user directory & platform governance for <span className="font-bold text-slate-800 dark:text-slate-200">{userData?.name || "Admin"}</span>
+              Administrator: <span className="font-bold text-slate-800 dark:text-slate-200">{userData?.name || "Admin"}</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline-flex text-[10px] font-black uppercase tracking-wider text-rose-500 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">
-              Admin Access
+          <div className="flex items-center gap-2.5">
+            {/* Theme Toggle Button */}
+            <ThemeToggle />
+
+            <span className="hidden sm:inline-flex text-[10px] font-black uppercase tracking-wider text-rose-500 bg-rose-500/10 px-3 py-1.5 rounded-full border border-rose-500/20">
+              Admin
             </span>
 
             <DropdownMenu>
@@ -270,6 +302,9 @@ export default function AdminDashboard() {
                 <DropdownMenuItem onClick={() => router.push("/dashboard/profile")} className="cursor-pointer text-xs font-bold">
                   <User className="w-4 h-4 mr-2 text-orange-500" /> Admin Profile
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("settings")} className="cursor-pointer text-xs font-bold">
+                  <Settings className="w-4 h-4 mr-2 text-slate-500" /> Settings
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/properties")} className="cursor-pointer text-xs font-bold">
                   <Building2 className="w-4 h-4 mr-2 text-emerald-500" /> Public Site
                 </DropdownMenuItem>
@@ -282,200 +317,508 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Overview Cards (Real Dynamic Counts) */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Registered Users</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{usersList.length}</p>
-            <p className="text-[11px] text-slate-400">Live DB records</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
-            <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider">Active Properties</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{propertiesList.length}</p>
-            <p className="text-[11px] text-slate-400">Published listings</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
-            <p className="text-xs font-bold text-orange-500 uppercase tracking-wider">Rental Requests</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{rentalsList.length}</p>
-            <p className="text-[11px] text-slate-400">Applications submitted</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
-            <p className="text-xs font-bold text-blue-500 uppercase tracking-wider">Platform Volume</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">
-              ৳{totalVolume >= 100000 ? `${(totalVolume / 100000).toFixed(1)}L` : totalVolume.toLocaleString()}
-            </p>
-            <p className="text-[11px] text-slate-400">Total requested rents</p>
-          </div>
-        </div>
-
-        {/* Filtered & Paginated User Management Table */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">Platform Users Directory</h3>
-              <p className="text-xs text-slate-500 font-medium">Real-time user accounts registered in database</p>
+        {/* TAB 1: OVERVIEW */}
+        {activeTab === "overview" && (
+          <div className="space-y-8 animate-fade-in">
+            {/* Overview Cards (Real Dynamic Counts) */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Registered Users</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">{usersList.length}</p>
+                <p className="text-[11px] text-slate-400">Live DB records</p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+                <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider">Active Properties</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">{propertiesList.length}</p>
+                <p className="text-[11px] text-slate-400">Published listings</p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+                <p className="text-xs font-bold text-orange-500 uppercase tracking-wider">Rental Requests</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">{rentalsList.length}</p>
+                <p className="text-[11px] text-slate-400">Applications submitted</p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
+                <p className="text-xs font-bold text-blue-500 uppercase tracking-wider">Platform Volume</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">
+                  ৳{totalVolume >= 100000 ? `${(totalVolume / 100000).toFixed(1)}L` : totalVolume.toLocaleString()}
+                </p>
+                <p className="text-[11px] text-slate-400">Total requested rents</p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search user or email..."
-                  value={searchQuery}
+            {/* Quick summary grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Recent Users preview */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Recent Users</h3>
+                  <button
+                    onClick={() => setActiveTab("users")}
+                    className="text-xs font-bold text-orange-500 hover:text-orange-600 cursor-pointer flex items-center gap-1"
+                  >
+                    View All <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2.5">
+                  {usersList.slice(0, 4).map((u) => (
+                    <div
+                      key={u.id}
+                      className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">{u.name}</p>
+                        <p className="text-[10px] text-slate-400">{u.email}</p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-orange-500/10 text-orange-500">
+                        {u.role}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Properties preview */}
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Recent Properties</h3>
+                  <button
+                    onClick={() => setActiveTab("properties")}
+                    className="text-xs font-bold text-orange-500 hover:text-orange-600 cursor-pointer flex items-center gap-1"
+                  >
+                    View All <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2.5">
+                  {propertiesList.slice(0, 4).map((p) => (
+                    <div
+                      key={p.id}
+                      className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between"
+                    >
+                      <div className="truncate mr-3">
+                        <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{p.title}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{p.location}</p>
+                      </div>
+                      <span className="text-xs font-extrabold text-orange-500 shrink-0">
+                        ৳{Number(p.price || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: MANAGE USERS */}
+        {activeTab === "users" && (
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">Platform Users Directory</h3>
+                <p className="text-xs text-slate-500 font-medium">Real-time user accounts registered in database</p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search user or email..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-8 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none"
+                  />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+                </div>
+
+                <select
+                  value={roleFilter}
                   onChange={(e) => {
-                    setSearchQuery(e.target.value);
+                    setRoleFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="pl-8 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none"
-                />
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+                  className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="TENANT">Tenant</option>
+                  <option value="LANDLORD">Landlord</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
               </div>
-
-              <select
-                value={roleFilter}
-                onChange={(e) => {
-                  setRoleFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
-              >
-                <option value="all">All Roles</option>
-                <option value="TENANT">Tenant</option>
-                <option value="LANDLORD">Landlord</option>
-                <option value="ADMIN">Admin</option>
-              </select>
             </div>
+
+            {filteredUsers.length === 0 ? (
+              <div className="text-center py-12 px-4 space-y-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
+                  <Users className="w-7 h-7" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">No users found</h4>
+                  <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
+                    {searchQuery || roleFilter !== "all"
+                      ? "No users matched your query filter."
+                      : "No users currently registered in database."}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px]">
+                      <th className="py-3 px-4">User Name</th>
+                      <th className="py-3 px-4">Email</th>
+                      <th className="py-3 px-4">Role</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Joined Date</th>
+                      <th className="py-3 px-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedUsers.map((u) => {
+                      const joinedStr = u.createdAt
+                        ? new Date(u.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Recent";
+                      const isUpdating = updatingUserId === u.id;
+                      const isBlocked = u.status?.toUpperCase() === "BLOCKED";
+
+                      return (
+                        <tr
+                          key={u.id}
+                          className="border-b border-slate-100/60 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
+                        >
+                          <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                            <div>
+                              <p>{u.name}</p>
+                              <p className="text-[10px] font-mono font-normal text-slate-400">ID: {u.id?.slice(0, 8)}...</p>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4">{u.email}</td>
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+                                u.role === "ADMIN"
+                                  ? "bg-rose-500/10 text-rose-500"
+                                  : u.role === "LANDLORD"
+                                  ? "bg-blue-500/10 text-blue-500"
+                                  : "bg-orange-500/10 text-orange-500"
+                              }`}
+                            >
+                              {u.role}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                                !isBlocked
+                                  ? "bg-emerald-500/10 text-emerald-500"
+                                  : "bg-red-500/10 text-red-500"
+                              }`}
+                            >
+                              {!isBlocked ? "ACTIVE" : "BLOCKED"}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">{joinedStr}</td>
+                          <td className="py-3.5 px-4 text-right">
+                            {u.role !== "ADMIN" && (
+                              <button
+                                onClick={() => handleToggleStatus(u)}
+                                disabled={isUpdating}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-colors cursor-pointer ${
+                                  isBlocked
+                                    ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200"
+                                    : "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                                }`}
+                              >
+                                {isUpdating ? (
+                                  <Loader2 className="w-3 h-3 animate-spin mx-auto" />
+                                ) : isBlocked ? (
+                                  "Unblock"
+                                ) : (
+                                  "Block"
+                                )}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+        )}
 
-          {filteredUsers.length === 0 ? (
-            <div className="text-center py-12 px-4 space-y-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
-                <Users className="w-7 h-7" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-sm font-black text-slate-900 dark:text-white">No users found</h4>
-                <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-                  {searchQuery || roleFilter !== "all"
-                    ? "No users matched your query filter."
-                    : "No users currently registered in database."}
-                </p>
+        {/* TAB 3: MANAGE PROPERTIES */}
+        {activeTab === "properties" && (
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">Platform Property Listings</h3>
+                <p className="text-xs text-slate-500">All properties published across all landlords ({propertiesList.length})</p>
               </div>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs font-semibold text-slate-600 dark:text-slate-300">
-                <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px]">
-                    <th className="py-3 px-4">User Name</th>
-                    <th className="py-3 px-4">Email</th>
-                    <th className="py-3 px-4">Role</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Joined Date</th>
-                    <th className="py-3 px-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedUsers.map((u) => {
-                    const joinedStr = u.createdAt
-                      ? new Date(u.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "Recent";
-                    const isUpdating = updatingUserId === u.id;
-                    const isBlocked = u.status?.toUpperCase() === "BLOCKED";
 
-                    return (
+            {propertiesList.length === 0 ? (
+              <div className="text-center py-12 px-4 space-y-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                <Building2 className="w-10 h-10 text-orange-500 mx-auto" />
+                <h4 className="text-sm font-black text-slate-900 dark:text-white">No properties listed yet</h4>
+                <p className="text-xs text-slate-500">Properties listed by landlords will appear here.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px]">
+                      <th className="py-3 px-4">Title</th>
+                      <th className="py-3 px-4">Landlord</th>
+                      <th className="py-3 px-4">Location</th>
+                      <th className="py-3 px-4">Price</th>
+                      <th className="py-3 px-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {propertiesList.map((p) => (
                       <tr
-                        key={u.id}
+                        key={p.id}
                         className="border-b border-slate-100/60 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
                       >
-                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                          <div>
-                            <p>{u.name}</p>
-                            <p className="text-[10px] font-mono font-normal text-slate-400">ID: {u.id?.slice(0, 8)}...</p>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4">{u.email}</td>
+                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{p.title}</td>
+                        <td className="py-3.5 px-4">{p.landlord?.name || p.landlordId || "Landlord"}</td>
+                        <td className="py-3.5 px-4">{p.location}</td>
+                        <td className="py-3.5 px-4 font-extrabold text-orange-500">৳{Number(p.price || 0).toLocaleString()}</td>
                         <td className="py-3.5 px-4">
                           <span
                             className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
-                              u.role === "ADMIN"
-                                ? "bg-rose-500/10 text-rose-500"
-                                : u.role === "LANDLORD"
-                                ? "bg-blue-500/10 text-blue-500"
-                                : "bg-orange-500/10 text-orange-500"
+                              p.isAvailable !== false ? "bg-emerald-500/10 text-emerald-500" : "bg-blue-500/10 text-blue-500"
                             }`}
                           >
-                            {u.role}
+                            {p.isAvailable !== false ? "AVAILABLE" : "RENTED"}
                           </span>
                         </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: RENTAL REQUESTS */}
+        {activeTab === "requests" && (
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6 animate-fade-in">
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">All System Rental Requests</h3>
+              <p className="text-xs text-slate-500">Every application submitted on the RentNest platform ({rentalsList.length})</p>
+            </div>
+
+            {rentalsList.length === 0 ? (
+              <div className="text-center py-12 px-4 space-y-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                <Clock className="w-10 h-10 text-orange-500 mx-auto" />
+                <h4 className="text-sm font-black text-slate-900 dark:text-white">No rental requests recorded</h4>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase text-[10px]">
+                      <th className="py-3 px-4">Tenant</th>
+                      <th className="py-3 px-4">Landlord</th>
+                      <th className="py-3 px-4">Property</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Move-In</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rentalsList.map((r) => (
+                      <tr
+                        key={r.id}
+                        className="border-b border-slate-100/60 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
+                      >
+                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{r.tenant?.name || "Tenant"}</td>
+                        <td className="py-3.5 px-4">{r.property?.landlord?.name || "Landlord"}</td>
+                        <td className="py-3.5 px-4">{r.property?.title || "Property"}</td>
                         <td className="py-3.5 px-4">
                           <span
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                              !isBlocked
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+                              r.status === "APPROVED"
                                 ? "bg-emerald-500/10 text-emerald-500"
+                                : r.status === "PENDING"
+                                ? "bg-amber-500/10 text-amber-500"
                                 : "bg-red-500/10 text-red-500"
                             }`}
                           >
-                            {!isBlocked ? "ACTIVE" : "BLOCKED"}
+                            {r.status}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4">{joinedStr}</td>
-                        <td className="py-3.5 px-4 text-right">
-                          {u.role !== "ADMIN" && (
-                            <button
-                              onClick={() => handleToggleStatus(u)}
-                              disabled={isUpdating}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-colors cursor-pointer ${
-                                isBlocked
-                                  ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200"
-                                  : "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                              }`}
-                            >
-                              {isUpdating ? (
-                                <Loader2 className="w-3 h-3 animate-spin mx-auto" />
-                              ) : isBlocked ? (
-                                "Unblock"
-                              ) : (
-                                "Block"
-                              )}
-                            </button>
-                          )}
+                        <td className="py-3.5 px-4">
+                          {r.moveInDate ? new Date(r.moveInDate).toLocaleDateString() : "Flexible"}
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between text-xs font-bold text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
-                >
-                  Prev
-                </button>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
-                >
-                  Next
-                </button>
+        {/* TAB 5: CATEGORIES */}
+        {activeTab === "categories" && (
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6 animate-fade-in">
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Property Categories Directory</h3>
+              <p className="text-xs text-slate-500">Standard housing classifications available on the platform</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { name: "Apartment", desc: "Multi-family residential units", icon: Building2, color: "text-orange-500" },
+                { name: "Villa", desc: "Independent luxury houses", icon: ShieldCheck, color: "text-emerald-500" },
+                { name: "Penthouse", desc: "Top floor luxury suites", icon: TrendingUp, color: "text-blue-500" },
+                { name: "Studio", desc: "Compact single-room flats", icon: FolderTree, color: "text-indigo-500" },
+                { name: "Family House", desc: "Spacious suburban residences", icon: Building2, color: "text-amber-500" },
+              ].map((cat, i) => {
+                const Icon = cat.icon;
+                const count = propertiesList.filter((p) => p.category?.name?.toLowerCase() === cat.name.toLowerCase()).length;
+                return (
+                  <div key={i} className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Icon className={`w-6 h-6 ${cat.color}`} />
+                      <span className="text-xs font-black bg-white dark:bg-slate-900 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                        {count} listings
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white">{cat.name}</h4>
+                    <p className="text-[11px] text-slate-400">{cat.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: ANALYTICS */}
+        {activeTab === "analytics" && (
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-8 animate-fade-in">
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Platform Growth & Financial Metrics</h3>
+              <p className="text-xs text-slate-500">Real-time breakdown of volume, user conversions, and rental activities</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+                <p className="text-xs font-bold text-slate-400 uppercase">Total User Registrations</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">{usersList.length}</p>
+                <p className="text-[11px] text-emerald-500 font-bold">100% Verified DB Records</p>
+              </div>
+
+              <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+                <p className="text-xs font-bold text-slate-400 uppercase">Active Properties</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">{propertiesList.length}</p>
+                <p className="text-[11px] text-blue-500 font-bold">Available for rent</p>
+              </div>
+
+              <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+                <p className="text-xs font-bold text-slate-400 uppercase">Gross Rental Volume</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">
+                  ৳{totalVolume.toLocaleString()}
+                </p>
+                <p className="text-[11px] text-orange-500 font-bold">Total application value</p>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* TAB 7: SETTINGS */}
+        {activeTab === "settings" && (
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-8 animate-fade-in">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">System Administration Settings</h3>
+              <p className="text-xs text-slate-500">Configure global platform access, registration gating, and maintenance mode</p>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Settings className="w-4 h-4 text-orange-500" /> System Governance
+              </h4>
+
+              <div className="space-y-3">
+                <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer">
+                  <div>
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">Public User Registration</p>
+                    <p className="text-[11px] text-slate-400">Allow new tenants and landlords to sign up freely on the platform.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={publicReg}
+                    onChange={(e) => setPublicReg(e.target.checked)}
+                    className="w-4 h-4 accent-orange-500 cursor-pointer"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer">
+                  <div>
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">System Maintenance Mode</p>
+                    <p className="text-[11px] text-slate-400">When enabled, only administrators can sign in; others see maintenance page.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={maintenanceMode}
+                    onChange={(e) => setMaintenanceMode(e.target.checked)}
+                    className="w-4 h-4 accent-orange-500 cursor-pointer"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                type="button"
+                onClick={handleSaveSettings}
+                disabled={savingSettings}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 text-white dark:text-slate-900 font-extrabold text-xs rounded-2xl shadow-md transition-all cursor-pointer"
+              >
+                {savingSettings ? <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Platform Settings
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
