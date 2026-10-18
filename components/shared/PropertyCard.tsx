@@ -6,8 +6,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { getPropertyImage } from "@/components/home/FeaturedProperties";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { isInWishlist, toggleWishlistItem } from "@/utils/wishlist";
 
 interface PropertyCardProps {
   property: {
@@ -37,14 +38,33 @@ export default function PropertyCard({ property, index }: PropertyCardProps) {
     ? new Date(property.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
     : "Recently Added";
 
+  useEffect(() => {
+    setIsLiked(isInWishlist(property.id));
+    const handleUpdate = () => {
+      setIsLiked(isInWishlist(property.id));
+    };
+    window.addEventListener("wishlistUpdated", handleUpdate);
+    return () => window.removeEventListener("wishlistUpdated", handleUpdate);
+  }, [property.id]);
+
   const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsLiked(!isLiked);
-    if (!isLiked) {
+    const liked = toggleWishlistItem({
+      id: property.id,
+      title: property.title,
+      description: property.description,
+      location: property.location,
+      price: property.price,
+      createdAt: property.createdAt,
+      rating: typeof rating === "string" ? parseFloat(rating) : rating,
+      category: property.category,
+    });
+    setIsLiked(liked);
+    if (liked) {
       toast.success("Saved to wishlist!", { description: property.title });
     } else {
-      toast.info("Removed from wishlist");
+      toast.info("Removed from wishlist", { description: property.title });
     }
   };
 

@@ -26,7 +26,10 @@ import {
   Shield,
   Save,
   Check,
+  Trash2,
+  MapPin,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getMe } from "@/service/getMe";
@@ -35,6 +38,14 @@ import { logout } from "@/service/logout";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { getPropertyImage } from "@/components/home/FeaturedProperties";
+import {
+  getWishlist,
+  removeFromWishlist,
+  clearWishlist,
+  setActiveUserId,
+  type WishlistProperty,
+} from "@/utils/wishlist";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +60,7 @@ export default function TenantDashboard() {
   const [activeTab, setActiveTab] = useState<"overview" | "requests" | "saved" | "settings">("overview");
   const [userData, setUserData] = useState<any>(null);
   const [requests, setRequests] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<WishlistProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Search & Filter state for requests
@@ -83,6 +95,10 @@ export default function TenantDashboard() {
         }
 
         setUserData(user);
+        if (user.id) {
+          setActiveUserId(user.id);
+          setWishlist(getWishlist(user.id));
+        }
 
         // Fetch real rental requests for this specific logged-in tenant
         const rentalsRes = await getTenantRentals();
@@ -101,10 +117,34 @@ export default function TenantDashboard() {
     loadTenantData();
   }, []);
 
+  // Listen for real-time wishlist updates across tabs/components
+  useEffect(() => {
+    const handleWishlistChange = () => {
+      setWishlist(getWishlist(userData?.id));
+    };
+    window.addEventListener("wishlistUpdated", handleWishlistChange);
+    return () => window.removeEventListener("wishlistUpdated", handleWishlistChange);
+  }, [userData?.id]);
+
   const handleLogout = async () => {
+    setActiveUserId(null);
     await logout();
     toast.success("Logged out successfully!");
     window.location.href = "/auth/login";
+  };
+
+  const handleRemoveFromWishlist = (propertyId: string, title?: string) => {
+    removeFromWishlist(propertyId, userData?.id);
+    setWishlist((prev) => prev.filter((p) => p.id !== propertyId));
+    toast.info("Removed from wishlist", { description: title });
+  };
+
+  const handleClearAllWishlist = () => {
+    if (confirm("Are you sure you want to remove all properties from your wishlist?")) {
+      clearWishlist(userData?.id);
+      setWishlist([]);
+      toast.info("Wishlist cleared");
+    }
   };
 
   const handleSaveSettings = () => {
@@ -163,7 +203,7 @@ export default function TenantDashboard() {
   const sidebarLinks = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "requests", label: "My Rental Requests", icon: Clock },
-    { id: "saved", label: "Saved Wishlist", icon: Heart },
+    { id: "saved", label: "Saved Wishlist", icon: Heart, badge: wishlist.length > 0 ? wishlist.length : undefined },
     { id: "profile", label: "My Profile", icon: User, isRoute: true },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -217,14 +257,27 @@ export default function TenantDashboard() {
                       setActiveTab(link.id as any);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer ${
                     isActive
                       ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-md"
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? "text-orange-500" : "text-slate-400"}`} />
-                  {link.label}
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${isActive ? "text-orange-500" : "text-slate-400"}`} />
+                    <span>{link.label}</span>
+                  </div>
+                  {link.badge !== undefined && (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                        isActive
+                          ? "bg-orange-500 text-white"
+                          : "bg-rose-500/10 text-rose-500 dark:bg-rose-500/20"
+                      }`}
+                    >
+                      {link.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -304,7 +357,7 @@ export default function TenantDashboard() {
         {activeTab === "overview" && (
           <div className="space-y-8 animate-fade-in">
             {/* Overview Cards (Real Dynamic Counts) */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Requests</p>
                 <p className="text-3xl font-black text-slate-900 dark:text-white">{requests.length}</p>
@@ -323,6 +376,19 @@ export default function TenantDashboard() {
                   {requests.filter((r) => r.status === "PENDING").length}
                 </p>
                 <p className="text-[11px] text-slate-400">Awaiting landlord response</p>
+              </div>
+              <div
+                onClick={() => setActiveTab("saved")}
+                className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-2 cursor-pointer hover:border-rose-400/60 dark:hover:border-rose-500/60 transition-all group"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-rose-500 uppercase tracking-wider">Saved Wishlist</p>
+                  <Heart className="w-4 h-4 text-rose-500 fill-rose-500 group-hover:scale-110 transition-transform" />
+                </div>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">{wishlist.length}</p>
+                <p className="text-[11px] text-slate-400 group-hover:text-rose-500 font-medium transition-colors">
+                  {wishlist.length > 0 ? "View saved properties →" : "Save properties to view →"}
+                </p>
               </div>
             </div>
 
@@ -589,34 +655,123 @@ export default function TenantDashboard() {
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-6 animate-fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white">Saved Properties Wishlist</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">Saved Properties Wishlist</h3>
+                  {wishlist.length > 0 && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                      {wishlist.length} {wishlist.length === 1 ? "Property" : "Properties"}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-slate-500">Properties you bookmarked for later consideration</p>
               </div>
-              <Link
-                href="/properties"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all"
-              >
-                <Search className="w-3.5 h-3.5" /> Explore More Homes
-              </Link>
+
+              <div className="flex items-center gap-2.5">
+                {wishlist.length > 0 && (
+                  <button
+                    onClick={handleClearAllWishlist}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Clear All
+                  </button>
+                )}
+                <Link
+                  href="/properties"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all"
+                >
+                  <Search className="w-3.5 h-3.5" /> Explore More Homes
+                </Link>
+              </div>
             </div>
 
-            <div className="text-center py-14 px-4 space-y-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
-                <Heart className="w-7 h-7" />
+            {wishlist.length === 0 ? (
+              <div className="text-center py-14 px-4 space-y-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                  <Heart className="w-7 h-7" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">Your wishlist is currently empty</h4>
+                  <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
+                    While browsing apartments, villas, and houses, click the heart icon on any property to save it here for quick access!
+                  </p>
+                </div>
+                <Link
+                  href="/properties"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-extrabold text-xs rounded-xl transition-all shadow-md cursor-pointer"
+                >
+                  <Building2 className="w-4 h-4" /> Browse Properties
+                </Link>
               </div>
-              <div className="space-y-1">
-                <h4 className="text-sm font-black text-slate-900 dark:text-white">Your wishlist is currently empty</h4>
-                <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-                  While browsing apartments, villas, and houses, click the heart icon on any property to save it here for quick access!
-                </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {wishlist.map((item) => {
+                  const imgUrl = getPropertyImage(item.id);
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-white dark:bg-slate-800/50 rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex flex-col group"
+                    >
+                      {/* Image Thumbnail & Badges */}
+                      <div className="relative h-48 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                        <Image
+                          src={imgUrl}
+                          alt={item.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        />
+                        <div className="absolute top-3 left-3">
+                          <span className="bg-slate-900/85 backdrop-blur-md text-white text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full shadow-sm">
+                            {item.category?.name || "Apartment"}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFromWishlist(item.id, item.title)}
+                          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 dark:bg-slate-900/90 text-rose-500 flex items-center justify-center shadow-md hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                          title="Remove from wishlist"
+                        >
+                          <Heart className="w-4 h-4 fill-current" />
+                        </button>
+                        <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1 rounded-xl text-xs font-black text-slate-900 dark:text-white shadow-sm border border-white/40 dark:border-slate-700">
+                          ৳{Number(item.price).toLocaleString()}
+                          <span className="text-[10px] text-slate-400 font-semibold">/mo</span>
+                        </div>
+                      </div>
+
+                      {/* Content Area */}
+                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div className="space-y-1.5">
+                          <h4 className="font-extrabold text-sm text-slate-900 dark:text-white line-clamp-1 group-hover:text-orange-500 transition-colors">
+                            {item.title}
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 font-medium line-clamp-1">
+                            <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                            {item.location}
+                          </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                          <Link
+                            href={`/properties/${item.id}`}
+                            className="flex-1 py-2 px-3 text-center bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-extrabold shadow-sm transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            View Details <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                          <button
+                            onClick={() => handleRemoveFromWishlist(item.id, item.title)}
+                            className="p-2 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-500/10 transition-colors cursor-pointer border border-transparent hover:border-rose-500/20"
+                            title="Remove from wishlist"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <Link
-                href="/properties"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-extrabold text-xs rounded-xl transition-all shadow-md cursor-pointer"
-              >
-                <Building2 className="w-4 h-4" /> Browse Properties
-              </Link>
-            </div>
+            )}
           </div>
         )}
 

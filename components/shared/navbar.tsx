@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { setActiveUserId } from "@/utils/wishlist";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Navbar({ user }: { user: any }) {
@@ -49,6 +50,13 @@ export function Navbar({ user }: { user: any }) {
   const isUserLoggedIn = Boolean(user && user.success && user.data?.user);
   const userData = user?.data?.user;
   const userRole = userData?.role?.toUpperCase();
+
+  // Sync active user ID for wishlist isolation
+  useEffect(() => {
+    if (isUserLoggedIn && userData?.id) {
+      setActiveUserId(userData.id);
+    }
+  }, [isUserLoggedIn, userData?.id]);
 
   // Initialize theme
   useEffect(() => {
@@ -83,6 +91,7 @@ export function Navbar({ user }: { user: any }) {
   }
 
   const handleLogout = async () => {
+    setActiveUserId(null);
     await logout();
     toast.success("Logged out successfully!");
     window.location.href = "/auth/login";

@@ -27,6 +27,7 @@ import { getMe } from "@/service/getMe";
 import { getPropertyImage } from "@/components/home/FeaturedProperties";
 import PropertyCard from "@/components/shared/PropertyCard";
 import { motion, AnimatePresence } from "framer-motion";
+import { isInWishlist, toggleWishlistItem } from "@/utils/wishlist";
 
 export default function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
@@ -77,6 +78,39 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     }
     loadDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (property?.id) {
+      setIsLiked(isInWishlist(property.id));
+    }
+    const handleSync = () => {
+      if (property?.id) {
+        setIsLiked(isInWishlist(property.id));
+      }
+    };
+    window.addEventListener("wishlistUpdated", handleSync);
+    return () => window.removeEventListener("wishlistUpdated", handleSync);
+  }, [property?.id]);
+
+  const handleToggleWishlist = () => {
+    if (!property) return;
+    const liked = toggleWishlistItem({
+      id: property.id,
+      title: property.title,
+      description: property.description,
+      location: property.location,
+      price: property.price,
+      category: property.category,
+      amenities: property.amenities,
+      rating: property.rating,
+    });
+    setIsLiked(liked);
+    if (liked) {
+      toast.success("Saved to wishlist!", { description: property.title });
+    } else {
+      toast.info("Removed from wishlist", { description: property.title });
+    }
+  };
 
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,10 +228,15 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsLiked(!isLiked)}
-              className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer shadow-sm"
+              onClick={handleToggleWishlist}
+              className={`p-2.5 rounded-2xl border transition-colors cursor-pointer shadow-sm ${
+                isLiked
+                  ? "bg-rose-50 border-rose-200 text-rose-500 dark:bg-rose-950/30 dark:border-rose-900"
+                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+              title={isLiked ? "Remove from wishlist" : "Save to wishlist"}
             >
-              <Heart className={`w-4.5 h-4.5 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
+              <Heart className={`w-4.5 h-4.5 ${isLiked ? "fill-rose-500 text-rose-500" : ""}`} />
             </button>
             <button
               onClick={handleShare}
